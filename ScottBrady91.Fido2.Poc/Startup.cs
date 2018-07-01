@@ -10,12 +10,17 @@ namespace ScottBrady91.Fido2.Poc
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            services.AddAuthentication("cookie")
+                .AddCookie("cookie");
         }
         
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseDeveloperExceptionPage();
-            
+
+            app.UseAuthentication();
+
             app.UseStaticFiles();
             app.UseMvcWithDefaultRoute();
         }
