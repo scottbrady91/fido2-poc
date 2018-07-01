@@ -1,1 +1,94 @@
-﻿
+﻿@model RegisterViewModel
+
+<h1>Register</h1>
+<form>
+    <input id="username" name="username" type="text" placeholder="username" required/>
+    <button type="submit">Register</button>
+</form>
+
+@section Scripts
+{
+<script>
+        $("form").on("submit", function (e) {
+            e.preventDefault();
+
+            console.log($("#username").val());
+            console.log("@Html.Raw(Model.Challenge)");
+            console.log("@Model.RelyingPartyId");
+
+            var byteCharacters = atob("@Html.Raw(Model.Challenge)");
+            var byteNumbers = new Array(byteCharacters.length);
+            for (var i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            var challenge = new Uint8Array(byteNumbers);
+
+            var pubKeyCredParams = [
+                {
+                    type: "public-key",
+                    alg: -7
+                }
+            ];
+
+            var rp = {
+                name: "Test Site",
+                id: "@Model.RelyingPartyId"
+            };
+
+            var username = $("#username").val();
+            var user = {
+                name: username,
+                displayName: username,
+                id: new TextEncoder("utf-8").encode(username)
+            };
+
+            var publicKey = { challenge, pubKeyCredParams, rp, user };
+
+
+
+            navigator.credentials.create({ publicKey }).then((credentials) => {
+                console.log(credentials);
+
+                var publicKeyCredentialToJSON = (pubKeyCred) => {
+                    if (pubKeyCred instanceof Array) {
+                        let arr = [];
+                        for (let i of pubKeyCred)
+                            arr.push(publicKeyCredentialToJSON(i));
+
+                        return arr;
+                    }
+
+                    if (pubKeyCred instanceof ArrayBuffer) {
+                        return btoa(String.fromCharCode.apply(null, new Uint8Array(pubKeyCred)));
+                    }
+
+                    if (pubKeyCred instanceof Object) {
+                        let obj = {};
+
+                        for (let key in pubKeyCred) {
+                            obj[key] = publicKeyCredentialToJSON(pubKeyCred[key]);
+                        }
+
+                        obj["username"] = username;
+                        return obj;
+                    }
+
+                    return pubKeyCred;
+                }
+
+                var credentialsAsJson = publicKeyCredentialToJSON(credentials);
+                console.log(credentialsAsJson);
+
+                $.ajax({
+                    url: '/Account/RegisterCallback',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(credentialsAsJson),
+                    success:function() {
+                        window.location.href = "/";
+                    }
+                });
+            });
+        });
+</script>
+}

@@ -1,0 +1,79 @@
+﻿@model FidoLoginModel
+
+<h1>Login</h1>
+
+<p>Please use your FIDO authenticator...</p>
+
+@section Scripts
+{
+    <script>
+        var byteCharacters = atob("@Html.Raw(Model.Challenge)");
+        var byteNumbers = new Array(byteCharacters.length);
+        for (var i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        var challenge = new Uint8Array(byteNumbers);
+
+        var raw = window.atob('@Html.Raw(Model.KeyId)');
+        var rawLength = raw.length;
+        var key = new Uint8Array(new ArrayBuffer(rawLength));
+
+        for(i = 0; i < rawLength; i++) {
+            key[i] = raw.charCodeAt(i);
+        }
+
+        var allowCredentials = [{
+            type: "public-key",
+            id: key,
+            transports: ["usb"]
+        }];
+
+        var rpId = "@Model.RelyingPartyId";
+
+        var publicKey = { challenge, allowCredentials, rpId };
+
+        navigator.credentials.get({ publicKey }).then((credentials) => {
+            console.log(credentials);
+
+            var publicKeyCredentialToJSON = (pubKeyCred) => {
+                if (pubKeyCred instanceof Array) {
+                    let arr = [];
+                    for (let i of pubKeyCred)
+                        arr.push(publicKeyCredentialToJSON(i));
+
+                    return arr;
+                }
+
+                if (pubKeyCred instanceof ArrayBuffer) {
+                    return btoa(String.fromCharCode.apply(null, new Uint8Array(pubKeyCred)));
+                }
+
+                if (pubKeyCred instanceof Object) {
+                    let obj = {};
+
+                    for (let key in pubKeyCred) {
+                        obj[key] = publicKeyCredentialToJSON(pubKeyCred[key]);
+                    }
+                    
+                    return obj;
+                }
+
+                return pubKeyCred;
+            }
+
+            var credentialsAsJson = publicKeyCredentialToJSON(credentials);
+            console.log(credentialsAsJson);
+
+            $.ajax({
+                url: '/Account/LoginCallback',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(credentialsAsJson),
+                success:function() {
+                    window.location.href = "/";
+                }
+            });
+        });
+
+    </script>
+}

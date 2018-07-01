@@ -9,7 +9,9 @@ namespace ScottBrady91.Fido2.Poc
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc()
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+                .AddCookieTempDataProvider();
 
             services.AddAuthentication("cookie")
                 .AddCookie("cookie");

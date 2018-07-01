@@ -13,17 +13,8 @@ namespace ScottBrady91.Fido2.Poc.Controllers
         }
 
         [Authorize]
-        public IActionResult About()
+        public IActionResult Protected()
         {
-            ViewData["Message"] = "Your application description page.";
-
-            return View();
-        }
-
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
-
             return View();
         }
         
