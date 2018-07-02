@@ -6,6 +6,8 @@
 
 @section Scripts
 {
+    <script src="https://cdn.rawgit.com/mgalante/jquery.redirect/master/jquery.redirect.js"></script>
+
     <script>
         var byteCharacters = atob("@Html.Raw(Model.Challenge)");
         var byteNumbers = new Array(byteCharacters.length);
@@ -18,22 +20,23 @@
         var rawLength = raw.length;
         var key = new Uint8Array(new ArrayBuffer(rawLength));
 
-        for(i = 0; i < rawLength; i++) {
+        for (i = 0; i < rawLength; i++) {
             key[i] = raw.charCodeAt(i);
         }
 
-        var allowCredentials = [{
-            type: "public-key",
-            id: key,
-            transports: ["usb"]
-        }];
+        var allowCredentials = [
+            {
+                type: "public-key",
+                id: key,
+                transports: ["usb"]
+            }
+        ];
 
         var rpId = "@Model.RelyingPartyId";
 
         var publicKey = { challenge, allowCredentials, rpId };
 
         navigator.credentials.get({ publicKey }).then((credentials) => {
-            console.log(credentials);
 
             var publicKeyCredentialToJSON = (pubKeyCred) => {
                 if (pubKeyCred instanceof Array) {
@@ -54,24 +57,14 @@
                     for (let key in pubKeyCred) {
                         obj[key] = publicKeyCredentialToJSON(pubKeyCred[key]);
                     }
-                    
+
                     return obj;
                 }
 
                 return pubKeyCred;
             }
-
-            var credentialsAsJson = publicKeyCredentialToJSON(credentials);
-            console.log(credentialsAsJson);
-
-            $.ajax({
-                url: '/Account/LoginCallback',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(credentialsAsJson),
-                success:function() {
-                    window.location.href = "/";
-                }
+            jQuery(function($) {
+                $.redirect("/Account/LoginCallback", publicKeyCredentialToJSON(credentials), "POST");
             });
         });
 

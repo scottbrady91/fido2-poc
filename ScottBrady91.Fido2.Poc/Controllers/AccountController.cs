@@ -48,7 +48,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
         public IActionResult RegisterCallback([FromBody] CredentialsModel model)
         {
             // 1. Let JSONtext be the result of running UTF-8 decode on the value of response.clientDataJSON
-            var jsonText = Encoding.UTF8.GetString(base64UrlDecode(model.Response.ClientDataJson));
+            var jsonText = Encoding.UTF8.GetString(Base64UrlDecode(model.Response.ClientDataJson));
 
             // 2. Let C, the client data claimed as collected during the credential creation, be the result of running an implementation-specific JSON parser on JSONtext
             var c = JsonConvert.DeserializeObject<ClientData>(jsonText);
@@ -59,7 +59,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             // 4. Verify that the value of C.challenge matches the challenge that was sent to the authenticator in the create() call.
             var data = tempData.LoadTempData(HttpContext);
             var challenge = (string)data["challenge"];
-            if (base64UrlDecode(c.Challenge) == Convert.FromBase64String(challenge)) throw new Exception("Incorrect challenge");
+            if (Base64UrlDecode(c.Challenge) == Convert.FromBase64String(challenge)) throw new Exception("Incorrect challenge");
 
             // 5. Verify that the value of C.origin matches the Relying Party's origin.
             if (c.Origin != "http://localhost:5000") throw new Exception("Incorrect origin");
@@ -70,12 +70,12 @@ namespace ScottBrady91.Fido2.Poc.Controllers
 
             // 7. Compute the hash of response.clientDataJSON using SHA-256.
             var hasher = new SHA256Managed();
-            var hashedClientDataJson = hasher.ComputeHash(base64UrlDecode(model.Response.ClientDataJson)); // Why???
+            var hashedClientDataJson = hasher.ComputeHash(Base64UrlDecode(model.Response.ClientDataJson)); // Why???
 
             // 8. Perform CBOR decoding on the attestationObject field of the AuthenticatorAttestationResponse structure
             // to obtain the attestation statement format fmt, the authenticator data authData, and the attestation statement attStmt.
             CBORObject cbor;
-            using (var stream = new MemoryStream(base64UrlDecode(model.Response.AttestationObject)))
+            using (var stream = new MemoryStream(Base64UrlDecode(model.Response.AttestationObject)))
                 cbor = CBORObject.Read(stream);
             
             var authData = cbor["authData"].GetByteString();
@@ -169,7 +169,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
         }
 
         [HttpPost]
-        public IActionResult LoginCallback([FromBody] CredentialsModel model)
+        public IActionResult LoginCallback([FromForm] CredentialsModel model)
         {
             // 1. If the allowCredentials option was given when this authentication ceremony was initiated, verify that credential.id identifies one of the public key credentials that were listed in allowCredentials.
             var data = tempData.LoadTempData(HttpContext);
@@ -186,7 +186,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             var sig = model.Response.Signature;
 
             // 5. Let JSONtext be the result of running UTF-8 decode on the value of cData.
-            var jsonText = Encoding.UTF8.GetString(base64UrlDecode(cData));
+            var jsonText = Encoding.UTF8.GetString(Base64UrlDecode(cData));
 
             // 6. Let C, the client data claimed as used for the signature, be the result of running an implementation-specific JSON parser on JSONtext.
             var c = JsonConvert.DeserializeObject<ClientData>(jsonText);
@@ -196,7 +196,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
 
             // 8. Verify that the value of C.challenge matches the challenge that was sent to the authenticator in the PublicKeyCredentialRequestOptions passed to the get() call.
             var challenge = (string)data["challenge"];
-            if (base64UrlDecode(c.Challenge) == Convert.FromBase64String(challenge)) throw new Exception("Incorrect challenge");
+            if (Base64UrlDecode(c.Challenge) == Convert.FromBase64String(challenge)) throw new Exception("Incorrect challenge");
 
             // 9. Verify that the value of C.origin matches the Relying Party's origin.
             if (c.Origin != "http://localhost:5000") throw new Exception("Incorrect origin");
@@ -208,7 +208,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             // 11. Verify that the rpIdHash in aData is the SHA-256 hash of the RP ID expected by the Relying Party.
             var hasher = new SHA256Managed();
 
-            var span = base64UrlDecode(aData).AsSpan();
+            var span = Base64UrlDecode(aData).AsSpan();
             // RP ID Hash (32 bytes)
             // TODO: SHA-256 original RP ID and compare
             var rpIdHash = span.Slice(0, 32); span = span.Slice(32);
@@ -240,41 +240,49 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             // TODO: Handle extension results
 
             // 15. Let hash be the result of computing a hash over the cData using SHA-256.
-            var hash = hasher.ComputeHash(base64UrlDecode(cData)); // 32 bytes
+            var hash = hasher.ComputeHash(Base64UrlDecode(cData)); // 32 bytes
 
             // 16. Using the credential public key looked up in step 3, verify that sig is a valid signature over the binary concatenation of aData and hash.
-            var a = base64UrlDecode(model.Response.AuthenticatorData);
+            var a = Base64UrlDecode(model.Response.AuthenticatorData);
 
             var sigBase = new byte[a.Length + hash.Length];
             a.CopyTo(sigBase, 0);
             hash.CopyTo(sigBase, a.Length);
 
             // https://crypto.stackexchange.com/questions/1795/how-can-i-convert-a-der-ecdsa-signature-to-asn-1
-            var s = base64UrlDecode(sig);
-            // [0] = 0x30
-            var b1 = s[1]; // length in bytes of remaining bytes
-            // [2] = 0x02
-            var b2 = s[3]; // length of "signed big-endian encoding of the value "r", of minimal length"
-            var rVal = s.Skip(4).Take(b2).ToArray();
-            // 0x02
-            var b3 = s[3 + b2 + 2];
-            var sVal = s.Skip(4 + b2 + 3).Take(b3).ToArray();
+            var s = Base64UrlDecode(sig);
+            
+            var ms = new MemoryStream(s);
+            var header = ms.ReadByte();
+            var b1 = ms.ReadByte();
 
+            var markerR = ms.ReadByte();
+            var b2 = ms.ReadByte();
+            var vr = new byte[b2];
+            ms.Read(vr, 0, vr.Length);
+            vr = RemoveAnyNegativeFlag(vr);
+
+            var markerS = ms.ReadByte();
+            var b3 = ms.ReadByte();
+            var vs = new byte[b3];
+            ms.Read(vs, 0, vs.Length);
+            vs = RemoveAnyNegativeFlag(vs);
+            
             // verify signature
             var ecDsa = ECDsa.Create(new ECParameters
             {
                 Curve = ECCurve.NamedCurves.nistP256,
                 Q = new ECPoint
                 {
-                    X = base64UrlDecode(user.PublicKey.X),
-                    Y = base64UrlDecode(user.PublicKey.Y)
+                    X = Base64UrlDecode(user.PublicKey.X),
+                    Y = Base64UrlDecode(user.PublicKey.Y)
                 }
             });
 
-            var sigMan = new byte[rVal.Length + sVal.Length];
-            rVal.CopyTo(sigMan, 0);
-            sVal.CopyTo(sigMan, rVal.Length);
-            var isValid = ecDsa.VerifyData(sigBase, sigMan, HashAlgorithmName.SHA256);
+            var parsedSignature = new byte[vr.Length + vs.Length];
+            vr.CopyTo(parsedSignature, 0);
+            vs.CopyTo(parsedSignature, vr.Length);
+            var isValid = ecDsa.VerifyData(sigBase, parsedSignature, HashAlgorithmName.SHA256);
 
             if (isValid)
             {
@@ -286,7 +294,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
                         new Claim("name", user.Username)
                     }, "cookie")));
 
-                    return Ok();
+                    return Redirect("/");
                 }
 
                 throw new Exception("Possible cloned authenticator");
@@ -296,7 +304,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
         }
 
         // rfc4648_base64_url_decode
-        private static byte[] base64UrlDecode(string url)
+        private static byte[] Base64UrlDecode(string url)
         {
             url = url.Replace('-', '+');
             url = url.Replace('_', '/');
@@ -318,6 +326,15 @@ namespace ScottBrady91.Fido2.Poc.Controllers
                     throw new Exception("Invalid string.");
             }
             return Convert.FromBase64String(url);
+        }
+
+        private byte[] RemoveAnyNegativeFlag(byte[] input)
+        {
+            if (input[0] != 0) return input;
+
+            var output = new byte[input.Length - 1];
+            Array.Copy(input, 1, output, 0, output.Length);
+            return output;
         }
     }
 }
