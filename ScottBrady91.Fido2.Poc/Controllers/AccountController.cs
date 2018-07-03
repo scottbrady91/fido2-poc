@@ -153,9 +153,9 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             return View();
         }
 
-        public IActionResult Login()
+        public IActionResult Login(string returnUrl)
         {
-            return View();
+            return View(new UsernameModel {ReturnUrl = returnUrl});
         }
 
         [HttpPost]
@@ -168,7 +168,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
 
             // store challenge & key ID for later use
             tempData.SaveTempData(HttpContext,
-                new Dictionary<string, object> {{"challenge", challenge}, {"keyId", user.CredentialId}});
+                new Dictionary<string, object> {{"challenge", challenge}, {"keyId", user.CredentialId}, {"returnUrl", model.ReturnUrl}});
             
             return View(new FidoLoginModel {KeyId = user.CredentialId, Challenge = challenge, RelyingPartyId = RelyingPartyId});
         }
@@ -272,8 +272,10 @@ namespace ScottBrady91.Fido2.Poc.Controllers
                     user.Counter = Convert.ToInt32(counter);
                     HttpContext.SignInAsync("cookie",
                         new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> {new Claim("name", user.Username)}, "cookie")));
-                    
-                    return Redirect("/");
+
+                    var returnUrl = (string) data["returnUrl"];
+                    if (returnUrl[0] == '/') return Redirect(returnUrl);
+                    return RedirectToAction("Index", "Home");
                 }
 
                 throw new Exception("Possible cloned authenticator");
