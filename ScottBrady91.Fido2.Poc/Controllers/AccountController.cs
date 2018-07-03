@@ -148,6 +148,11 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             return Ok();
         }
 
+        public IActionResult RegisterSuccess()
+        {
+            return View();
+        }
+
         public IActionResult Login()
         {
             return View();
