@@ -12,10 +12,7 @@
         $("form").on("submit", function (e) {
             e.preventDefault();
 
-            console.log($("#username").val());
-            console.log("@Html.Raw(Model.Challenge)");
-            console.log("@Model.RelyingPartyId");
-
+            // Update challenge string to expected Uint8Array
             var byteCharacters = atob("@Html.Raw(Model.Challenge)");
             var byteNumbers = new Array(byteCharacters.length);
             for (var i = 0; i < byteCharacters.length; i++) {
@@ -23,18 +20,21 @@
             }
             var challenge = new Uint8Array(byteNumbers);
 
+            // Request ES256 algorithm
             var pubKeyCredParams = [
                 {
                     type: "public-key",
-                    alg: -7
+                    alg: -7 
                 }
             ];
 
+            // Relying party details
             var rp = {
                 name: "Test Site",
                 id: "@Model.RelyingPartyId"
             };
 
+            // User handle
             var username = $("#username").val();
             var user = {
                 name: username,
@@ -43,9 +43,7 @@
             };
 
             var publicKey = { challenge, pubKeyCredParams, rp, user };
-
-
-
+            
             navigator.credentials.create({ publicKey }).then((credentials) => {
                 console.log(credentials);
 
@@ -77,7 +75,6 @@
                 }
 
                 var credentialsAsJson = publicKeyCredentialToJSON(credentials);
-                console.log(credentialsAsJson);
 
                 $.ajax({
                     url: '/Account/RegisterCallback',

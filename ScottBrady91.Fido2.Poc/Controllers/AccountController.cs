@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using IdentityModel;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -17,6 +18,9 @@ namespace ScottBrady91.Fido2.Poc.Controllers
 {
     public class AccountController : Controller
     {
+        // aka RP ID
+        private const string RelyingPartyId = "localhost";
+
         private static readonly List<User> Users = new List<User>();
         private readonly ITempDataProvider tempData;
 
@@ -25,20 +29,13 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             this.tempData = tempData ?? throw new ArgumentNullException(nameof(tempData));
         }
 
-        // aka RP ID
-        public const string RelyingPartyId = "localhost";
-
         public IActionResult Register()
         {
             // generate challenge
-            var rng = RandomNumberGenerator.Create();
-            var challengeBytes = new byte[16];
-            rng.GetBytes(challengeBytes);
-            var challenge = Convert.ToBase64String(challengeBytes);
-
+            var challenge = CryptoRandom.CreateRandomKeyString(16);
+            
             // store challenge for later use
-            tempData.SaveTempData(HttpContext, 
-                new Dictionary<string, object> {{"challenge", challenge}});
+            tempData.SaveTempData(HttpContext, new Dictionary<string, object> {{"challenge", challenge}});
 
             // send challenge & RP ID to view
             return View(new RegisterViewModel {Challenge = challenge, RelyingPartyId = RelyingPartyId});
@@ -48,7 +45,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
         public IActionResult RegisterCallback([FromBody] CredentialsModel model)
         {
             // 1. Let JSONtext be the result of running UTF-8 decode on the value of response.clientDataJSON
-            var jsonText = Encoding.UTF8.GetString(Base64UrlDecode(model.Response.ClientDataJson));
+            var jsonText = Encoding.UTF8.GetString(Base64Url.Decode(model.Response.ClientDataJson));
 
             // 2. Let C, the client data claimed as collected during the credential creation, be the result of running an implementation-specific JSON parser on JSONtext
             var c = JsonConvert.DeserializeObject<ClientData>(jsonText);
@@ -59,7 +56,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             // 4. Verify that the value of C.challenge matches the challenge that was sent to the authenticator in the create() call.
             var data = tempData.LoadTempData(HttpContext);
             var challenge = (string)data["challenge"];
-            if (Base64UrlDecode(c.Challenge) == Convert.FromBase64String(challenge)) throw new Exception("Incorrect challenge");
+            if (Base64Url.Decode(c.Challenge) == Convert.FromBase64String(challenge)) throw new Exception("Incorrect challenge");
 
             // 5. Verify that the value of C.origin matches the Relying Party's origin.
             if (c.Origin != "http://localhost:5000") throw new Exception("Incorrect origin");
@@ -70,12 +67,12 @@ namespace ScottBrady91.Fido2.Poc.Controllers
 
             // 7. Compute the hash of response.clientDataJSON using SHA-256.
             var hasher = new SHA256Managed();
-            var hashedClientDataJson = hasher.ComputeHash(Base64UrlDecode(model.Response.ClientDataJson)); // Why???
+            var hashedClientDataJson = hasher.ComputeHash(Base64Url.Decode(model.Response.ClientDataJson)); // Why???
 
             // 8. Perform CBOR decoding on the attestationObject field of the AuthenticatorAttestationResponse structure
             // to obtain the attestation statement format fmt, the authenticator data authData, and the attestation statement attStmt.
             CBORObject cbor;
-            using (var stream = new MemoryStream(Base64UrlDecode(model.Response.AttestationObject)))
+            using (var stream = new MemoryStream(Base64Url.Decode(model.Response.AttestationObject)))
                 cbor = CBORObject.Read(stream);
             
             var authData = cbor["authData"].GetByteString();
@@ -186,7 +183,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             var sig = model.Response.Signature;
 
             // 5. Let JSONtext be the result of running UTF-8 decode on the value of cData.
-            var jsonText = Encoding.UTF8.GetString(Base64UrlDecode(cData));
+            var jsonText = Encoding.UTF8.GetString(Base64Url.Decode(cData));
 
             // 6. Let C, the client data claimed as used for the signature, be the result of running an implementation-specific JSON parser on JSONtext.
             var c = JsonConvert.DeserializeObject<ClientData>(jsonText);
@@ -196,7 +193,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
 
             // 8. Verify that the value of C.challenge matches the challenge that was sent to the authenticator in the PublicKeyCredentialRequestOptions passed to the get() call.
             var challenge = (string)data["challenge"];
-            if (Base64UrlDecode(c.Challenge) == Convert.FromBase64String(challenge)) throw new Exception("Incorrect challenge");
+            if (Base64Url.Decode(c.Challenge) == Convert.FromBase64String(challenge)) throw new Exception("Incorrect challenge");
 
             // 9. Verify that the value of C.origin matches the Relying Party's origin.
             if (c.Origin != "http://localhost:5000") throw new Exception("Incorrect origin");
@@ -208,9 +205,8 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             // 11. Verify that the rpIdHash in aData is the SHA-256 hash of the RP ID expected by the Relying Party.
             var hasher = new SHA256Managed();
 
-            var span = Base64UrlDecode(aData).AsSpan();
+            var span = Base64Url.Decode(aData).AsSpan();
             // RP ID Hash (32 bytes)
-            // TODO: SHA-256 original RP ID and compare
             var rpIdHash = span.Slice(0, 32); span = span.Slice(32);
 
             // Flags (1 byte)
@@ -240,18 +236,48 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             // TODO: Handle extension results
 
             // 15. Let hash be the result of computing a hash over the cData using SHA-256.
-            var hash = hasher.ComputeHash(Base64UrlDecode(cData)); // 32 bytes
+            var hash = hasher.ComputeHash(Base64Url.Decode(cData)); // 32 bytes
 
             // 16. Using the credential public key looked up in step 3, verify that sig is a valid signature over the binary concatenation of aData and hash.
-            var a = Base64UrlDecode(model.Response.AuthenticatorData);
-
+            var a = Base64Url.Decode(model.Response.AuthenticatorData);
             var sigBase = new byte[a.Length + hash.Length];
             a.CopyTo(sigBase, 0);
             hash.CopyTo(sigBase, a.Length);
 
-            // https://crypto.stackexchange.com/questions/1795/how-can-i-convert-a-der-ecdsa-signature-to-asn-1
-            var s = Base64UrlDecode(sig);
+            var ecDsa = ECDsa.Create(new ECParameters
+            {
+                Curve = ECCurve.NamedCurves.nistP256,
+                Q = new ECPoint
+                {
+                    X = Base64Url.Decode(user.PublicKey.X),
+                    Y = Base64Url.Decode(user.PublicKey.Y)
+                }
+            });
             
+            var isValid = ecDsa.VerifyData(sigBase, DeserializeSignature(sig), HashAlgorithmName.SHA256);
+
+            if (isValid)
+            {
+                // 17. the signature counter value adata.signCount is nonzero or the value stored in conjunction with credential’s id attribute is nonzero
+                if (user.Counter < counter)
+                {
+                    HttpContext.SignInAsync("cookie",
+                        new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> {new Claim("name", user.Username)}, "cookie")));
+
+                    return Redirect("/");
+                }
+
+                throw new Exception("Possible cloned authenticator");
+            }
+
+            throw new Exception("Invalid Signature");
+        }
+
+        private byte[] DeserializeSignature(string signature)
+        {
+            // Thanks to: https://crypto.stackexchange.com/questions/1795/how-can-i-convert-a-der-ecdsa-signature-to-asn-1
+            var s = Base64Url.Decode(signature);
+
             var ms = new MemoryStream(s);
             var header = ms.ReadByte();
             var b1 = ms.ReadByte();
@@ -267,65 +293,12 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             var vs = new byte[b3];
             ms.Read(vs, 0, vs.Length);
             vs = RemoveAnyNegativeFlag(vs);
-            
-            // verify signature
-            var ecDsa = ECDsa.Create(new ECParameters
-            {
-                Curve = ECCurve.NamedCurves.nistP256,
-                Q = new ECPoint
-                {
-                    X = Base64UrlDecode(user.PublicKey.X),
-                    Y = Base64UrlDecode(user.PublicKey.Y)
-                }
-            });
 
             var parsedSignature = new byte[vr.Length + vs.Length];
             vr.CopyTo(parsedSignature, 0);
             vs.CopyTo(parsedSignature, vr.Length);
-            var isValid = ecDsa.VerifyData(sigBase, parsedSignature, HashAlgorithmName.SHA256);
 
-            if (isValid)
-            {
-                // 17. the signature counter value adata.signCount is nonzero or the value stored in conjunction with credential’s id attribute is nonzero
-                if (user.Counter < counter)
-                {
-                    HttpContext.SignInAsync("cookie", new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>
-                    {
-                        new Claim("name", user.Username)
-                    }, "cookie")));
-
-                    return Redirect("/");
-                }
-
-                throw new Exception("Possible cloned authenticator");
-            }
-
-            throw new Exception("Invalid Signature");
-        }
-
-        // rfc4648_base64_url_decode
-        private static byte[] Base64UrlDecode(string url)
-        {
-            url = url.Replace('-', '+');
-            url = url.Replace('_', '/');
-
-            switch (url.Length % 4)
-            { // Pad with trailing '='s
-                case 0:
-                    // No pad chars in this case
-                    break;
-                case 2:
-                    // Two pad chars
-                    url += "==";
-                    break;
-                case 3:
-                    // One pad char
-                    url += "=";
-                    break;
-                default:
-                    throw new Exception("Invalid string.");
-            }
-            return Convert.FromBase64String(url);
+            return parsedSignature;
         }
 
         private byte[] RemoveAnyNegativeFlag(byte[] input)
