@@ -31,14 +31,20 @@ namespace ScottBrady91.Fido2.Poc.Controllers
 
         public IActionResult Register()
         {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult FidoRegister([FromForm] UsernameModel model)
+        {
             // generate challenge
             var challenge = CryptoRandom.CreateRandomKeyString(16);
-            
+
             // store challenge for later use
-            tempData.SaveTempData(HttpContext, new Dictionary<string, object> {{"challenge", challenge}});
+            tempData.SaveTempData(HttpContext, new Dictionary<string, object> {{"challenge", challenge}, {"username", model.Username}});
 
             // send challenge & RP ID to view
-            return View(new RegisterViewModel {Challenge = challenge, RelyingPartyId = RelyingPartyId});
+            return View(new RegisterViewModel {Challenge = challenge, RelyingPartyId = RelyingPartyId, Username = model.Username});
         }
 
         [HttpPost]
@@ -63,7 +69,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
 
             // 6. Verify that the value of C.tokenBinding.status matches the state of Token Binding for the TLS connection over which the assertion was obtained.
             // If Token Binding was used on that TLS connection, also verify that C.tokenBinding.id matches the base64url encoding of the Token Binding ID for the connection.
-            // TODO: Token binding once out of draft
+            // TODO: Token binding (once out of draft)
 
             // 7. Compute the hash of response.clientDataJSON using SHA-256.
             var hasher = new SHA256Managed();
@@ -89,7 +95,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             var attestedCredentialData = flags[6]; // (AT) "Indicates whether the authenticator added attested credential data"
             var extensionDataIncluded = flags[7]; // (ED)
 
-            // Counter (4 bytes, big-endian unint32)
+            // Signature counter (4 bytes, big-endian unint32)
             var counterBuf = span.Slice(0, 4); span = span.Slice(4);
             var counter = BitConverter.ToUInt32(counterBuf); // https://www.w3.org/TR/webauthn/#signature-counter
 
@@ -129,15 +135,15 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             // 16. Assess the attestation trustworthiness using the outputs of the verification procedure in step 14
             // TODO: Use of FIDO metadata service
 
-            // 17. Check that the credentialId is not yet registered to any other user
+            // 17. Check that the credentialId is not yet registered to any other user & 
             var parsedCredentialId = Convert.ToBase64String(credentialId.ToArray());
             if (Users.Any(x => x.CredentialId == parsedCredentialId)) throw new Exception("Duplicate credential ID");
-
+            
             // 18. If the attestation statement attStmt verified successfully and is found to be trustworthy, then register the new credential
             var coseStruct = CBORObject.DecodeFromBytes(span.ToArray());
             var key = JsonConvert.DeserializeObject<CredentialPublicKey>(coseStruct.ToJSONString());
 
-            Users.Add(new User{Username = model.Username, CredentialId = parsedCredentialId, PublicKey = key});
+            Users.Add(new User{Username = (string)data["username"], CredentialId = parsedCredentialId, PublicKey = key});
 
             return Ok();
         }
@@ -148,13 +154,10 @@ namespace ScottBrady91.Fido2.Poc.Controllers
         }
 
         [HttpPost]
-        public IActionResult FidoLogin([FromForm] LoginModel model)
+        public IActionResult FidoLogin([FromForm] UsernameModel model)
         {
             // generate challenge
-            var rng = RandomNumberGenerator.Create();
-            var challengeBytes = new byte[16];
-            rng.GetBytes(challengeBytes);
-            var challenge = Convert.ToBase64String(challengeBytes);
+            var challenge = CryptoRandom.CreateRandomKeyString(16);
 
             var user = Users.First(x => x.Username == model.Username);
 
@@ -219,7 +222,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             var attestedCredentialData = flags[6]; // (AT) "Indicates whether the authenticator added attested credential data"
             var extensionDataIncluded = flags[7]; // (ED)
 
-            // Counter (4 bytes, big-endian unint32)
+            // Signature counter (4 bytes, big-endian unint32)
             var counterBuf = span.Slice(0, 4); span = span.Slice(4);
             var counter = BitConverter.ToUInt32(counterBuf); // https://www.w3.org/TR/webauthn/#signature-counter
 
@@ -261,9 +264,10 @@ namespace ScottBrady91.Fido2.Poc.Controllers
                 // 17. the signature counter value adata.signCount is nonzero or the value stored in conjunction with credential’s id attribute is nonzero
                 if (user.Counter < counter)
                 {
+                    user.Counter = Convert.ToInt32(counter);
                     HttpContext.SignInAsync("cookie",
                         new ClaimsPrincipal(new ClaimsIdentity(new List<Claim> {new Claim("name", user.Username)}, "cookie")));
-
+                    
                     return Redirect("/");
                 }
 
