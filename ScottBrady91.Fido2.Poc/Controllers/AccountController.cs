@@ -62,7 +62,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
             // 4. Verify that the value of C.challenge matches the challenge that was sent to the authenticator in the create() call.
             var data = tempData.LoadTempData(HttpContext);
             var challenge = (string)data["challenge"];
-            if (Base64Url.Decode(c.Challenge) == Convert.FromBase64String(challenge)) throw new Exception("Incorrect challenge");
+            if (!Base64Url.Decode(c.Challenge).SequenceEqual(Convert.FromBase64String(challenge))) throw new Exception("Incorrect challenge");
 
             // 5. Verify that the value of C.origin matches the Relying Party's origin.
             if (c.Origin != "http://localhost:5000") throw new Exception("Incorrect origin");
@@ -201,7 +201,7 @@ namespace ScottBrady91.Fido2.Poc.Controllers
 
             // 8. Verify that the value of C.challenge matches the challenge that was sent to the authenticator in the PublicKeyCredentialRequestOptions passed to the get() call.
             var challenge = (string)data["challenge"];
-            if (Base64Url.Decode(c.Challenge) == Convert.FromBase64String(challenge)) throw new Exception("Incorrect challenge");
+            if (!Base64Url.Decode(c.Challenge).SequenceEqual(Convert.FromBase64String(challenge))) throw new Exception("Incorrect challenge");
 
             // 9. Verify that the value of C.origin matches the Relying Party's origin.
             if (c.Origin != "http://localhost:5000") throw new Exception("Incorrect origin");
