@@ -291,20 +291,20 @@ namespace ScottBrady91.Fido2.Poc.Controllers
 
             using (var ms = new MemoryStream(s))
             {
-                var header = ms.ReadByte();
-                var b1 = ms.ReadByte();
+                var header = ms.ReadByte(); // marker
+                var b1 = ms.ReadByte(); // length of remaining bytes
 
-                var markerR = ms.ReadByte();
-                var b2 = ms.ReadByte();
-                var vr = new byte[b2];
+                var markerR = ms.ReadByte(); // marker
+                var b2 = ms.ReadByte(); // length of vr
+                var vr = new byte[b2]; // signed big-endian encoding of r
                 ms.Read(vr, 0, vr.Length);
-                vr = RemoveAnyNegativeFlag(vr);
+                vr = RemoveAnyNegativeFlag(vr); // r
 
-                var markerS = ms.ReadByte();
-                var b3 = ms.ReadByte();
-                var vs = new byte[b3];
+                var markerS = ms.ReadByte(); // marker 
+                var b3 = ms.ReadByte(); // length of vs
+                var vs = new byte[b3]; // signed big-endian encoding of s
                 ms.Read(vs, 0, vs.Length);
-                vs = RemoveAnyNegativeFlag(vs);
+                vs = RemoveAnyNegativeFlag(vs); // s
 
                 var parsedSignature = new byte[vr.Length + vs.Length];
                 vr.CopyTo(parsedSignature, 0);
