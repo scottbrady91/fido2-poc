@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScottBrady.Fido2", "src\ScottBrady.Fido2\ScottBrady.Fido2.csproj", "{C47F8FE9-08E5-4F8B-9BDC-F9C76FB83469}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScottBrady.Fido2.Tests", "test\ScottBrady.Fido2.Tests\ScottBrady.Fido2.Tests.csproj", "{2DF8602D-0A94-4A7B-A818-531280DEBB12}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F8656F77-E2AC-4F06-B197-C4A257298289}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{00BAC5E2-58D1-4E79-9C5E-6CA26EBDBCC6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C47F8FE9-08E5-4F8B-9BDC-F9C76FB83469}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C47F8FE9-08E5-4F8B-9BDC-F9C76FB83469}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C47F8FE9-08E5-4F8B-9BDC-F9C76FB83469}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C47F8FE9-08E5-4F8B-9BDC-F9C76FB83469}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DF8602D-0A94-4A7B-A818-531280DEBB12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DF8602D-0A94-4A7B-A818-531280DEBB12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DF8602D-0A94-4A7B-A818-531280DEBB12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DF8602D-0A94-4A7B-A818-531280DEBB12}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C47F8FE9-08E5-4F8B-9BDC-F9C76FB83469} = {F8656F77-E2AC-4F06-B197-C4A257298289}
+		{2DF8602D-0A94-4A7B-A818-531280DEBB12} = {00BAC5E2-58D1-4E79-9C5E-6CA26EBDBCC6}
+	EndGlobalSection
+EndGlobal
