@@ -37,6 +37,7 @@ public class AuthenticatorResponseConverter : JsonConverter<AuthenticatorRespons
         {
             var jsonObject = jsonDocument.RootElement.GetRawText();
             
+            // TODO: check value not null too
             if (!jsonDocument.RootElement.TryGetProperty("signature", out _))
             {
                 return JsonSerializer.Deserialize<AuthenticatorAttestationResponse>(jsonObject, options);

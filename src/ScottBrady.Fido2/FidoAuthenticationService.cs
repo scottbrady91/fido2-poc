@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
 using ScottBrady.Fido2.Models;
@@ -31,12 +32,15 @@ public class FidoAuthenticationService
         // TODO: global RPID
         // TODO: set/override extensions?
 
+        // test code - for hardcoded user, single key in system
+        var key = InMemoryFidoKeyStore.Keys.First();
+
         var options = new PublicKeyCredentialRequestOptions
         {
             Challenge = RandomNumberGenerator.GetBytes(16),
             RpId = RpId,
-            // TODO: AllowCredentials =
-            // TODO: make AllowCredentials optional???
+            AllowCredentials = new []{new PublicKeyCredentialDescriptor{Id = key.CredentialId, Type = "public-key"}},
+            // TODO: make AllowCredentials optional??? Required when you know the user? Try again later...
             UserVerification = request.UserVerification ?? FidoConstants.UserVerificationRequirement.Preferred
         };
         
@@ -70,9 +74,27 @@ public class FidoAuthenticationService
         // known during auth: confirm owner of key
         // unknown during auth: confirm present and owner of key
 
+        if (clientData.Type != "webauthn.get") throw new Exception("Incorrect type");
+        if (!challenge.SequenceEqual(options.Challenge)) throw new Exception("Incorrect challenge");
+        if (clientData.Origin != "https://localhost:5000") throw new Exception("Incorrect origin");
+        if (clientData.TokenBinding != null && clientData.TokenBinding.Status == TokenBinding.TokenBindingStatus.Present) throw new Exception("Incorrect token binding");
+
+        var authenticatorData = authenticatorDataParser.Parse(response.AuthenticatorData);
+        if (!SHA256.HashData(Encoding.UTF8.GetBytes(RpId)).SequenceEqual(authenticatorData.RpIdHash)) throw new Exception("Incorrect RP ID");
+        
+        if (authenticatorData.UserPresent == false) throw new Exception("Incorrect user present");
+        
+        // TODO: check if user verified required
+        
+        // TODO: hook to validate extensions?
+
+        var hash = SHA256.HashData(response.ClientDataJson);
+        
+        // TODO: validate signature
         
         
-        
+        // TODO: validate & update signature counter
+
     }
 }
 

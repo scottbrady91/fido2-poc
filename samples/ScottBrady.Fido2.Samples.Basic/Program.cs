@@ -32,4 +32,9 @@ app.MapGet("/fido/authenticate", async () =>
     return Results.Json(options, new JsonSerializerOptions{Converters = { new IntArrayConverter() }, PropertyNameCaseInsensitive = true}, statusCode: 200);
 });
 
+app.MapPost("/fido/authenticate", async (PublicKeyCredential credential) =>
+{
+    await new FidoAuthenticationService(new InMemoryFidoOptionsStore()).Complete(credential);
+});
+
 app.Run();

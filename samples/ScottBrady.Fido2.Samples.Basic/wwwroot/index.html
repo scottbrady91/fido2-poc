@@ -5,13 +5,10 @@
 <script>
     if (!window.PublicKeyCredential) { console.error("WebAuthn not supported by browser!") }
     
-    var options = null;
-    var createdCred = null
-    
     async function register() {
         
         let response = await fetch("/fido/register");
-        options = await response.json();
+        let options = await response.json();
         options.challenge = new Uint8Array(options.challenge);
         options.user.id = new Uint8Array(options.user.id);
         console.log("options:", options);
@@ -19,11 +16,6 @@
         navigator.credentials.create({ publicKey:{
             challenge: options.challenge,
             rp: options.rp,
-            /*user: {
-                id: Uint8Array.from(atob("MIIBkzCCATigAwIBAjCCAZMwggE4oAMCAQIwggGTMII="), c=>c.charCodeAt(0)),
-                name: "scott@scottbrady91.com",
-                displayName: "Scott's test",
-            },*/
             user: options.user,
             pubKeyCredParams: [
                 {
@@ -40,8 +32,7 @@
                 userVerification: "preferred"
             },
             timeout: 360000,  // 6 minutes            
-        }}).then(async (credential) => {
-            createdCred = credential;            
+        }}).then(async (credential) => {         
             console.log(credential);
             console.log("rawId", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))));
             console.log("attestationObject", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))));
@@ -62,7 +53,7 @@
                     // publicKey: credential.response.getPublicKey(),
                     // publicKeyAlgorithm: credential.response.getPublicKeyAlgorithm(),
                     response: {
-                        AttestationObject: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))),
+                        attestationObject: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))),
                         clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)))
                     }
                 })
@@ -75,8 +66,52 @@
     async function authenticate() {
 
         let response = await fetch("/fido/authenticate");
-        options = await response.json();
-        options.challenge = new Uint8Array(options.challenge);
+        let options = await response.json();
+        options.challenge = new Uint8Array(options.Challenge);
         console.log("options:", options);
+
+        // TODO: casing
+        for (const allowCredential of options.AllowCredentials) {
+            allowCredential.id = new Uint8Array(allowCredential.Id) 
+            allowCredential.type = allowCredential.Type
+        }
+        
+        console.log(options.AllowCredentials);
+        
+        let credential = await navigator.credentials.get({ publicKey: {
+            challenge: options.challenge, 
+            allowCredentials: options.AllowCredentials
+        }});
+
+        console.log(credential);
+        console.log("rawId", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))));
+        console.log("authenticatorData", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.authenticatorData))));
+        console.log("signature", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.signature))));
+        console.log("userHandle", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.userHandle))));
+        console.log("clientDataJSON", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON))));
+
+        
+        await fetch("/fido/authenticate", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                id: credential.id,
+                rawId: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))),
+                type: credential.type,
+                // extensions: credential.getClientExtensionResults(),
+                // transports: credential.response.getTransports(), 
+                // authenticatorData: credential.response.getAuthenticatorData(),
+                // publicKey: credential.response.getPublicKey(),
+                // publicKeyAlgorithm: credential.response.getPublicKeyAlgorithm(),
+                response: {
+                    authenticatorData: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.authenticatorData))),
+                    signature: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.signature))),
+                    userHandle: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.userHandle))),
+                    clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)))
+                }
+            })
+        })
     }
 </script>
