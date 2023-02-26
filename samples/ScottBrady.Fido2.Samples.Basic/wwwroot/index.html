@@ -1,5 +1,6 @@
 ﻿<h1>Click to register new (no server)</h1>
 <button onclick="register()">register</button>
+<button onclick="authenticate()">authenticate</button>
 
 <script>
     if (!window.PublicKeyCredential) { console.error("WebAuthn not supported by browser!") }
@@ -8,15 +9,12 @@
     var createdCred = null
     
     async function register() {
-
+        
         let response = await fetch("/fido/register");
         options = await response.json();
         options.challenge = new Uint8Array(options.challenge);
         options.user.id = new Uint8Array(options.user.id);
         console.log("options:", options);
-        
-        let challenge = Uint8Array.from(atob("V2pRWnLOxb+7Q/Vc5B495Q=="), c=>c.charCodeAt(0))
-        console.log("challenge", challenge)
         
         navigator.credentials.create({ publicKey:{
             challenge: options.challenge,
@@ -72,5 +70,13 @@
         }).catch((error) => {
             console.error(error);
         });
+    }
+
+    async function authenticate() {
+
+        let response = await fetch("/fido/authenticate");
+        options = await response.json();
+        options.challenge = new Uint8Array(options.challenge);
+        console.log("options:", options);
     }
 </script>

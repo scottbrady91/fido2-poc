@@ -58,7 +58,7 @@ public class InMemoryFidoOptionsStoreTests
     [Fact]
     public async Task Store_AuthenticationOptions_WhenOptionsDoNotExist_ExpectOptionsStored()
     {
-        var options = new FidoAuthenticationOptions { Challenge = RandomNumberGenerator.GetBytes(16) };
+        var options = new PublicKeyCredentialRequestOptions { Challenge = RandomNumberGenerator.GetBytes(16) };
 
         await sut.Store(options);
 
@@ -70,10 +70,10 @@ public class InMemoryFidoOptionsStoreTests
     {
         var challenge = RandomNumberGenerator.GetBytes(16);
         
-        var oldOptions = new FidoAuthenticationOptions { Challenge = challenge, Test = "TODO1"};
+        var oldOptions = new PublicKeyCredentialRequestOptions { Challenge = challenge, RpId = "localhost"};
         InMemoryFidoOptionsStore.AuthenticationOptions[InMemoryFidoOptionsStore.CreateKey(challenge)] = oldOptions;
         
-        var newOptions = new FidoAuthenticationOptions { Challenge = challenge, Test = "TODO2"};
+        var newOptions = new PublicKeyCredentialRequestOptions { Challenge = challenge, RpId = "you changed you RPID? why?! :("};
         await sut.Store(newOptions);
 
         InMemoryFidoOptionsStore.AuthenticationOptions[InMemoryFidoOptionsStore.CreateKey(challenge)].Should().Be(newOptions);
@@ -83,7 +83,7 @@ public class InMemoryFidoOptionsStoreTests
     public async Task TakeAuthenticationOptions_WhenOptionsExist_ExpectCorrectOptions()
     {
         var challenge = RandomNumberGenerator.GetBytes(16);
-        var expectedOptions = new FidoAuthenticationOptions { Challenge = challenge, Test = "TODO"};
+        var expectedOptions = new PublicKeyCredentialRequestOptions { Challenge = challenge, RpId = "localhost"};
         InMemoryFidoOptionsStore.AuthenticationOptions[InMemoryFidoOptionsStore.CreateKey(challenge)] = expectedOptions;
 
         var options = await sut.TakeAuthenticationOptions(challenge);

@@ -15,10 +15,10 @@ public interface IFidoOptionsStore
     Task Store(PublicKeyCredentialCreationOptions options);
 
     /// <summary>
-    /// Stores the generated <see cref="FidoAuthenticationOptions"/>.
+    /// Stores the generated <see cref="PublicKeyCredentialRequestOptions"/>.
     /// </summary>
     /// <param name="options"></param>
-    Task Store(FidoAuthenticationOptions options);
+    Task Store(PublicKeyCredentialRequestOptions options);
     
     /// <summary>
     /// Gets the stored <see cref="PublicKeyCredentialCreationOptions"/> for the current request.
@@ -32,5 +32,5 @@ public interface IFidoOptionsStore
     /// Can use the challenge as a lookup key.
     /// </summary>
     /// <param name="challenge"></param>
-    Task<FidoAuthenticationOptions> TakeAuthenticationOptions(byte[] challenge);
+    Task<PublicKeyCredentialRequestOptions> TakeAuthenticationOptions(byte[] challenge);
 }

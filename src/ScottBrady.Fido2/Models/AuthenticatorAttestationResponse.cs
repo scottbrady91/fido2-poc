@@ -1,6 +1,6 @@
 ﻿namespace ScottBrady.Fido2.Models;
 
-// TODO: cleanup
+// TODO: cleanup PublicKeyCredential & AuthenticatorResponse
 
 // https://www.w3.org/TR/webauthn-2/#iface-pkcredential
 public class PublicKeyCredential

@@ -1,4 +1,5 @@
-﻿using ScottBrady.Fido2.Models;
+﻿using System;
+using ScottBrady.Fido2.Models;
 
 namespace ScottBrady.Fido2;
 
@@ -13,7 +14,7 @@ namespace ScottBrady.Fido2;
 public class FidoRegistrationRequest
 {
     /// <summary>
-    /// Create a new registration request with required user data.
+    /// Creates a new registration request with required user data.
     /// </summary>
     /// <param name="username">
     /// The user's username.
@@ -26,8 +27,8 @@ public class FidoRegistrationRequest
     /// </param>
     public FidoRegistrationRequest(string username, string userDisplayName)
     {
-        Username = username;
-        UserDisplayName = userDisplayName;
+        Username = username ?? throw new ArgumentNullException(nameof(username));
+        UserDisplayName = userDisplayName ?? throw new ArgumentNullException(nameof(userDisplayName));
     }
 
     /// <inheritdoc cref="PublicKeyCredentialUserEntity.Name"/>

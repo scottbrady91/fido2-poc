@@ -11,14 +11,14 @@ namespace ScottBrady.Fido2.Stores;
 public class InMemoryFidoOptionsStore : IFidoOptionsStore
 {
     /// <summary>
-    /// The inner dictionary used for in-memory storage of FidoRegistrationOptions.
+    /// The inner dictionary used for in-memory storage of PublicKeyCredentialCreationOptions.
     /// </summary>
     public static readonly ConcurrentDictionary<string, PublicKeyCredentialCreationOptions> RegistrationOptions = new ConcurrentDictionary<string, PublicKeyCredentialCreationOptions>();
     
     /// <summary>
-    /// The inner dictionary used for in-memory storage of FidoAuthenticationOptions.
+    /// The inner dictionary used for in-memory storage of PublicKeyCredentialRequestOptions.
     /// </summary>
-    public static readonly ConcurrentDictionary<string, FidoAuthenticationOptions> AuthenticationOptions = new ConcurrentDictionary<string, FidoAuthenticationOptions>();
+    public static readonly ConcurrentDictionary<string, PublicKeyCredentialRequestOptions> AuthenticationOptions = new ConcurrentDictionary<string, PublicKeyCredentialRequestOptions>();
 
     /// <inheritdoc />
     public Task Store(PublicKeyCredentialCreationOptions options)
@@ -30,7 +30,7 @@ public class InMemoryFidoOptionsStore : IFidoOptionsStore
     }
 
     /// <inheritdoc />
-    public Task Store(FidoAuthenticationOptions options)
+    public Task Store(PublicKeyCredentialRequestOptions options)
     {
         if (options == null) throw new ArgumentNullException(nameof(options));
         
@@ -49,7 +49,7 @@ public class InMemoryFidoOptionsStore : IFidoOptionsStore
     }
 
     /// <inheritdoc />
-    public Task<FidoAuthenticationOptions> TakeAuthenticationOptions(byte[] challenge)
+    public Task<PublicKeyCredentialRequestOptions> TakeAuthenticationOptions(byte[] challenge)
     {
         if (challenge == null) throw new ArgumentNullException(nameof(challenge));
         

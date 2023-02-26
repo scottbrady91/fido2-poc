@@ -37,6 +37,6 @@ public class AuthenticatorSelectionCriteria
     /// <para>Unknown values will be ignored by the client.</para>
     /// <para>Defaults to "preferred"</para>
     /// </summary>
-    /// <example></example>
+    /// <example>preferred</example>
     public string UserVerification { get; set; } = "preferred";
 }
