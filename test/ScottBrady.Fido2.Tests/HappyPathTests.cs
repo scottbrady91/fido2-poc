@@ -53,7 +53,7 @@ public class HappyPathTests
     public void FidoRegistrationService_CompleteRegistration()
     {
         var optionsStore = new InMemoryFidoOptionsStore();
-        optionsStore.Store(new FidoRegistrationOptions { Challenge = testChallenge });
+        optionsStore.Store(new PublicKeyCredentialCreationOptions { Challenge = testChallenge });
         var sut = new FidoRegistrationService(optionsStore);
         
         sut.CompleteRegistration(testClientDataJson, testAttestationObject);

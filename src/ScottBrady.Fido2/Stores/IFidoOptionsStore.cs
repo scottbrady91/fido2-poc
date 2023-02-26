@@ -9,10 +9,10 @@ namespace ScottBrady.Fido2.Stores;
 public interface IFidoOptionsStore
 {
     /// <summary>
-    /// Stores the generated <see cref="FidoRegistrationOptions"/>.
+    /// Stores the generated <see cref="PublicKeyCredentialCreationOptions"/>.
     /// </summary>
     /// <param name="options"></param>
-    Task Store(FidoRegistrationOptions options);
+    Task Store(PublicKeyCredentialCreationOptions options);
 
     /// <summary>
     /// Stores the generated <see cref="FidoAuthenticationOptions"/>.
@@ -21,11 +21,11 @@ public interface IFidoOptionsStore
     Task Store(FidoAuthenticationOptions options);
     
     /// <summary>
-    /// Gets the stored <see cref="FidoRegistrationOptions"/> for the current request.
+    /// Gets the stored <see cref="PublicKeyCredentialCreationOptions"/> for the current request.
     /// Can use the challenge as a lookup key.
     /// </summary>
     /// <param name="challenge"></param>
-    Task<FidoRegistrationOptions> TakeRegistrationOptions(byte[] challenge);
+    Task<PublicKeyCredentialCreationOptions> TakeRegistrationOptions(byte[] challenge);
 
     /// <summary>
     /// Gets the stored <see cref="FidoAuthenticationOptions"/> for the current request.

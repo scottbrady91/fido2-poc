@@ -13,7 +13,7 @@ public class InMemoryFidoOptionsStoreTests
     [Fact]
     public async Task Store_RegistrationOptions_WhenOptionsDoNotExist_ExpectOptionsStored()
     {
-        var options = new FidoRegistrationOptions { Challenge = RandomNumberGenerator.GetBytes(16) };
+        var options = new PublicKeyCredentialCreationOptions { Challenge = RandomNumberGenerator.GetBytes(16) };
 
         await sut.Store(options);
 
@@ -25,10 +25,10 @@ public class InMemoryFidoOptionsStoreTests
     {
         var challenge = RandomNumberGenerator.GetBytes(16);
         
-        var oldOptions = new FidoRegistrationOptions { Challenge = challenge, User = new User {Id = RandomNumberGenerator.GetBytes(32)}};
+        var oldOptions = new PublicKeyCredentialCreationOptions { Challenge = challenge, User = new PublicKeyCredentialUserEntity {Id = RandomNumberGenerator.GetBytes(32)}};
         InMemoryFidoOptionsStore.RegistrationOptions[InMemoryFidoOptionsStore.CreateKey(challenge)] = oldOptions;
         
-        var newOptions = new FidoRegistrationOptions { Challenge = challenge, User = new User {Id = RandomNumberGenerator.GetBytes(32)}};
+        var newOptions = new PublicKeyCredentialCreationOptions { Challenge = challenge, User = new PublicKeyCredentialUserEntity {Id = RandomNumberGenerator.GetBytes(32)}};
         await sut.Store(newOptions);
 
         InMemoryFidoOptionsStore.RegistrationOptions[InMemoryFidoOptionsStore.CreateKey(challenge)].Should().Be(newOptions);
@@ -38,7 +38,7 @@ public class InMemoryFidoOptionsStoreTests
     public async Task TakeRegistrationOptions_WhenOptionsExist_ExpectCorrectOptions()
     {
         var challenge = RandomNumberGenerator.GetBytes(16);
-        var expectedOptions = new FidoRegistrationOptions { Challenge = challenge, User = new User {Id = RandomNumberGenerator.GetBytes(32)}};
+        var expectedOptions = new PublicKeyCredentialCreationOptions { Challenge = challenge, User = new PublicKeyCredentialUserEntity {Id = RandomNumberGenerator.GetBytes(32)}};
         InMemoryFidoOptionsStore.RegistrationOptions[InMemoryFidoOptionsStore.CreateKey(challenge)] = expectedOptions;
 
         var options = await sut.TakeRegistrationOptions(challenge);

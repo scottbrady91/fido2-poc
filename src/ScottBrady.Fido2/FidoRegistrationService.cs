@@ -26,20 +26,20 @@ public class FidoRegistrationService
         this.optionsStore = optionsStore ?? throw new ArgumentNullException(nameof(optionsStore));
     }
     
-    public async Task<FidoRegistrationOptions> StartRegistration(FidoRegistrationRequest request)
+    public async Task<PublicKeyCredentialCreationOptions> StartRegistration(FidoRegistrationRequest request)
     {
         // inputs: user
         // global: relying party
         // overrides: timeout, algs (PublicKeyCredentialParameters), excludeCredentials?, authenticatorSelection???, attestation preference, extensions (pass though?)
         
-        var options = new FidoRegistrationOptions
+        var options = new PublicKeyCredentialCreationOptions
         {
-            RelyingParty = new RelyingParty
+            Rp = new PublicKeyCredentialRpEntity
             {
                 Id = RpId,
                 Name = RpName
             },
-            User = new User
+            User = new PublicKeyCredentialUserEntity
             {
                 Id = RandomNumberGenerator.GetBytes(32),
                 Name = "Scott",

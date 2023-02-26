@@ -13,7 +13,7 @@ public class InMemoryFidoOptionsStore : IFidoOptionsStore
     /// <summary>
     /// The inner dictionary used for in-memory storage of FidoRegistrationOptions.
     /// </summary>
-    public static readonly ConcurrentDictionary<string, FidoRegistrationOptions> RegistrationOptions = new ConcurrentDictionary<string, FidoRegistrationOptions>();
+    public static readonly ConcurrentDictionary<string, PublicKeyCredentialCreationOptions> RegistrationOptions = new ConcurrentDictionary<string, PublicKeyCredentialCreationOptions>();
     
     /// <summary>
     /// The inner dictionary used for in-memory storage of FidoAuthenticationOptions.
@@ -21,7 +21,7 @@ public class InMemoryFidoOptionsStore : IFidoOptionsStore
     public static readonly ConcurrentDictionary<string, FidoAuthenticationOptions> AuthenticationOptions = new ConcurrentDictionary<string, FidoAuthenticationOptions>();
 
     /// <inheritdoc />
-    public Task Store(FidoRegistrationOptions options)
+    public Task Store(PublicKeyCredentialCreationOptions options)
     {
         if (options == null) throw new ArgumentNullException(nameof(options));
         
@@ -39,7 +39,7 @@ public class InMemoryFidoOptionsStore : IFidoOptionsStore
     }
 
     /// <inheritdoc />
-    public Task<FidoRegistrationOptions> TakeRegistrationOptions(byte[] challenge)
+    public Task<PublicKeyCredentialCreationOptions> TakeRegistrationOptions(byte[] challenge)
     {
         if (challenge == null) throw new ArgumentNullException(nameof(challenge));
         

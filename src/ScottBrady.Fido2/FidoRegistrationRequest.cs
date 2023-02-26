@@ -15,15 +15,6 @@ public class FidoRegistrationRequest
     public AttestationConveyancePreference Attestation { get; set; } = AttestationConveyancePreference.None;
 }
 
-// https://www.w3.org/TR/webauthn-2/#dictionary-authenticatorSelection
-public class AuthenticatorSelectionCriteria
-{
-    public string AuthenticatorAttachment { get; set; }
-    public string ResidentKey { get; set; }
-    public string RequireResidentKey { get; set; }
-    public string UserVerification { get; set; } = "preferred";
-}
-
 // https://w3c.github.io/webauthn/#enum-attestation-convey
 public enum AttestationConveyancePreference
 {
