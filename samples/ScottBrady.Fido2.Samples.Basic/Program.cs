@@ -28,13 +28,13 @@ app.MapPost("/fido/register", async (PublicKeyCredential response) =>
 
 app.MapGet("/fido/authenticate", async () =>
 {
-    var options = await new FidoAuthenticationService(new InMemoryFidoOptionsStore()).Initiate(new FidoAuthenticationRequest("Scott"));
+    var options = await new FidoAuthenticationService(new InMemoryFidoOptionsStore(), new InMemoryFidoKeyStore()).Initiate(new FidoAuthenticationRequest("Scott"));
     return Results.Json(options, new JsonSerializerOptions{Converters = { new IntArrayConverter() }, PropertyNameCaseInsensitive = true}, statusCode: 200);
 });
 
 app.MapPost("/fido/authenticate", async (PublicKeyCredential credential) =>
 {
-    await new FidoAuthenticationService(new InMemoryFidoOptionsStore()).Complete(credential);
+    await new FidoAuthenticationService(new InMemoryFidoOptionsStore(), new InMemoryFidoKeyStore()).Complete(credential);
 });
 
 app.Run();

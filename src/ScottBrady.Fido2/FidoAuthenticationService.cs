@@ -19,11 +19,12 @@ public class FidoAuthenticationService
     private readonly AuthenticatorDataParser authenticatorDataParser = new AuthenticatorDataParser();
     
     private readonly IFidoOptionsStore optionsStore;
-    private readonly IFidoKeyStore keyStore = new InMemoryFidoKeyStore();
+    private readonly IFidoKeyStore keyStore;
     
-    public FidoAuthenticationService(IFidoOptionsStore optionsStore)
+    public FidoAuthenticationService(IFidoOptionsStore optionsStore, IFidoKeyStore keyStore)
     {
         this.optionsStore = optionsStore ?? throw new ArgumentNullException(nameof(optionsStore));
+        this.keyStore = keyStore ?? throw new ArgumentNullException(nameof(keyStore));
     }
     
     public async Task<PublicKeyCredentialRequestOptions> Initiate(FidoAuthenticationRequest request)
@@ -62,7 +63,7 @@ public class FidoAuthenticationService
         if (options == null) throw new Exception("Incorrect options");
         
         // TODO: verify all allowed credentials
-        if (options.AllowCredentials.Any())
+        if (options.AllowCredentials?.Any() == true)
         {
             //
         }
