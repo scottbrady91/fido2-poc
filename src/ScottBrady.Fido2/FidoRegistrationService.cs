@@ -59,7 +59,7 @@ public class FidoRegistrationService
         return options;
     }
     
-    public async Task Complete(PublicKeyCredential credential)
+    public async Task<FidoRegistrationResult> Complete(PublicKeyCredential credential)
     {
         if (credential.Response is not AuthenticatorAttestationResponse response) throw new Exception("Incorrect response");
         var clientData = clientDataParser.Parse(response.ClientDataJson);
@@ -100,33 +100,19 @@ public class FidoRegistrationService
         // TODO: validate credential alg is supported by library
         
         // store key
-        await keyStore.Store(new FidoKey
+        var key = new FidoKey
         {
             UserId = options.User.Id,
             DeviceFriendlyName = options.DeviceDisplayName,
             CredentialId = attestationObject.AuthenticatorData.CredentialId,
             Counter = attestationObject.AuthenticatorData.SignCount,
             CredentialAsJson = attestationObject.AuthenticatorData.CredentialPublicKeyAsJson
-        });
+        };
+        await keyStore.Store(key);
 
         // TODO: recommended to store transports alongside key (call getTransports()) to use in future allowCredentials options
 
-        new FidoRegistrationResult
-        {
-            IsSuccess = true,
-            UserId = options.User.Id,
-            Username = options.User.Name,
-            CredentialId = attestationObject.AuthenticatorData.CredentialId
-        };
-    }
-}
 
-public class FidoRegistrationResult
-{
-    public bool IsSuccess { get; set; }
-    public string ErrorMessage { get; set; }
-    
-    public byte[] UserId { get; set; }
-    public string Username { get; set; }
-    public byte[] CredentialId { get; set; }
+        return FidoRegistrationResult.Success(key, attestationObject);
+    }
 }

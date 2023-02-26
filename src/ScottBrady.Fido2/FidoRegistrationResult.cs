@@ -7,22 +7,23 @@ namespace ScottBrady.Fido2;
 /// The result of FIDO authentication.
 /// Contains details about the user and credential.
 /// </summary>
-public class FidoAuthenticationResult
+public class FidoRegistrationResult
 {
-    private FidoAuthenticationResult() { }
+    private FidoRegistrationResult() { }
 
-    internal static FidoAuthenticationResult Success(FidoKey key, AuthenticatorData authenticatorData) => new FidoAuthenticationResult
+    internal static FidoRegistrationResult Success(FidoKey key, AttestationObject attestationObject) => new FidoRegistrationResult
     {
         UserId = key.UserId,
         Username = key.Username,
         CredentialId = key.CredentialId,
-        UserVerified = authenticatorData.UserVerified
+        UserVerified = attestationObject.AuthenticatorData.UserVerified,
+        AttestationStatementFormat = attestationObject.StatementFormat
     };
 
-    internal static FidoAuthenticationResult Failure(string error) => new FidoAuthenticationResult { Error = error };
+    internal static FidoRegistrationResult Failure(string error) => new FidoRegistrationResult { Error = error };
 
     /// <summary>
-    /// If authentication was successful.
+    /// If registration was successful.
     /// </summary>
     public bool IsSuccess => string.IsNullOrWhiteSpace(Error);
     
@@ -45,15 +46,20 @@ public class FidoAuthenticationResult
     public string Username { get; private set; }
     
     /// <summary>
-    /// The unique identifier of the credential.
+    /// The unique identifier of the created credential.
     /// This may be a 16-byte random value or an encrypted value that is understood by the authenticator.
     /// </summary>
     public byte[] CredentialId { get; private set; }
     
     /// <summary>
-    /// Whether or not the user verified their identity during authentication.
+    /// Whether or not the user verified their identity during registration.
     /// This is a multi-factor check, confirming if the user authenticated themselves to the authenticator with a local
     /// credential such as a PIN or a biometric.
     /// </summary>
     public bool UserVerified { get; private set; }
+    
+    /// <summary>
+    /// The format of the validation attestation statement provided by the authenticator.
+    /// </summary>
+    public string AttestationStatementFormat { get; private set; }
 }

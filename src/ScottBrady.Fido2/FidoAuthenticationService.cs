@@ -29,8 +29,7 @@ public class FidoAuthenticationService
     }
     
     // TODO: reg: user handle, credential ID
-    // TODO: auth: user handle, username, credential ID, user verified?,
-    
+
     public async Task<PublicKeyCredentialRequestOptions> Initiate(FidoAuthenticationRequest request)
     {
         // TODO: set/override timeout
