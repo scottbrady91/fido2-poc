@@ -13,7 +13,7 @@ public class PublicKeyCredential
     public AuthenticatorResponse Response { get; set; }
 }
 
-[JsonConverter(typeof(AuthenticatorResponseConverter))]
+[JsonConverter(typeof(AuthenticatorResponseJsonConverter))]
 public class AuthenticatorResponse
 {
     public byte[] ClientDataJson { get; set; }
