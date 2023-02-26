@@ -19,11 +19,13 @@ public class FidoRegistrationService
     private readonly ClientDataParser clientDataParser = new ClientDataParser();
 
     private readonly IFidoOptionsStore optionsStore;
+    private readonly FidoOptions configurationOptions;
     private readonly IFidoKeyStore keyStore = new InMemoryFidoKeyStore();
 
-    public FidoRegistrationService(IFidoOptionsStore optionsStore)
+    public FidoRegistrationService(IFidoOptionsStore optionsStore, FidoOptions configurationOptions)
     {
         this.optionsStore = optionsStore ?? throw new ArgumentNullException(nameof(optionsStore));
+        this.configurationOptions = configurationOptions ?? throw new ArgumentNullException(nameof(configurationOptions));
     }
     
     public async Task<PublicKeyCredentialCreationOptions> Initiate(FidoRegistrationRequest request)
@@ -33,11 +35,6 @@ public class FidoRegistrationService
 
         var options = new PublicKeyCredentialCreationOptions
         {
-            Rp = new PublicKeyCredentialRpEntity
-            {
-                Id = RpId,
-                Name = RpName
-            },
             User = new PublicKeyCredentialUserEntity
             {
                 Id = RandomNumberGenerator.GetBytes(32),
@@ -47,6 +44,15 @@ public class FidoRegistrationService
             Challenge = RandomNumberGenerator.GetBytes(32),
             DeviceDisplayName = request.DeviceDisplayName
         };
+
+        if (configurationOptions.RelyingPartyId is not null || configurationOptions.RelyingPartyName is not null)
+        {
+            options.Rp = new PublicKeyCredentialRpEntity
+            {
+                Id = configurationOptions.RelyingPartyId,
+                Name = configurationOptions.RelyingPartyName
+            };
+        }
         
         await optionsStore.Store(options);
 

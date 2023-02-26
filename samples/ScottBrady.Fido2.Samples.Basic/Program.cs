@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using ScottBrady.Fido2;
@@ -15,20 +16,20 @@ app.UseStaticFiles();
 
 app.MapGet("/fido/register", async () =>
 {
-    var options = await new FidoRegistrationService(new InMemoryFidoOptionsStore()).Initiate(new FidoRegistrationRequest("Scott", "Scott - test (minimal API)"));
-    return Results.Json(options, new JsonSerializerOptions{Converters = { new IntArrayJsonConverter() }, PropertyNameCaseInsensitive = true}, statusCode: 200);
+    var options = await new FidoRegistrationService(new InMemoryFidoOptionsStore(), new FidoOptions()).Initiate(new FidoRegistrationRequest("Scott", "Scott - test (minimal API)"));
+    return Results.Json(options, new JsonSerializerOptions{Converters = { new IntArrayJsonConverter() }, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, PropertyNameCaseInsensitive = true}, statusCode: 200);
 });
 
 app.MapPost("/fido/register", async (PublicKeyCredential response) =>
 {
     // TODO: use PublicKeyCredential
-    await new FidoRegistrationService(new InMemoryFidoOptionsStore()).Complete(response);
+    await new FidoRegistrationService(new InMemoryFidoOptionsStore(), new FidoOptions()).Complete(response);
 });
 
 app.MapGet("/fido/authenticate", async () =>
 {
     var options = await new FidoAuthenticationService(new InMemoryFidoOptionsStore(), new InMemoryFidoKeyStore()).Initiate(new FidoAuthenticationRequest("Scott"));
-    return Results.Json(options, new JsonSerializerOptions{Converters = { new IntArrayJsonConverter() }, PropertyNameCaseInsensitive = true}, statusCode: 200);
+    return Results.Json(options, new JsonSerializerOptions{Converters = { new IntArrayJsonConverter() }, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, PropertyNameCaseInsensitive = true}, statusCode: 200);
 });
 
 app.MapPost("/fido/authenticate", async (PublicKeyCredential credential) =>

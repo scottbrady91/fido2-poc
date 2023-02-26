@@ -28,22 +28,22 @@ public class FidoAuthenticationService
         this.keyStore = keyStore ?? throw new ArgumentNullException(nameof(keyStore));
     }
     
+    // TODO: reg: user handle, credential ID
+    // TODO: auth: user handle, username, credential ID, user verified?,
+    
     public async Task<PublicKeyCredentialRequestOptions> Initiate(FidoAuthenticationRequest request)
     {
         // TODO: set/override timeout
         // TODO: global RPID
         // TODO: set/override extensions?
 
-        // TODO: lookup key by username :(
-        
-        // test code - for hardcoded user, single key in system
-        var key = InMemoryFidoKeyStore.Keys.First();
+        var key = await keyStore.GetByUsername(request.Username);
 
         var options = new PublicKeyCredentialRequestOptions
         {
             Challenge = RandomNumberGenerator.GetBytes(32),
             RpId = RpId,
-            AllowCredentials = new []{new PublicKeyCredentialDescriptor{Id = key.CredentialId, Type = "public-key"}},
+            AllowCredentials = new[] { new PublicKeyCredentialDescriptor { Id = key.CredentialId, Type = "public-key" } },
             // TODO: make AllowCredentials optional??? Required when you know the user? Try again later...
             UserVerification = request.UserVerification ?? FidoConstants.UserVerificationRequirement.Preferred
         };
@@ -54,7 +54,7 @@ public class FidoAuthenticationService
     }
 
     // TODO: wrapper for options that includes custom data (e.g. expected user handle & device name during registration)
-    public async Task Complete(PublicKeyCredential credential)
+    public async Task<FidoAuthenticationResult> Complete(PublicKeyCredential credential)
     {
         if (credential.Response is not AuthenticatorAssertionResponse response) throw new Exception("Incorrect response");
         var clientData = clientDataParser.Parse(response.ClientDataJson);
@@ -102,10 +102,9 @@ public class FidoAuthenticationService
         
         var signatureValidator = new FidoSignatureValidator();
         await signatureValidator.ValidateSignature(dataToValidate, response.Signature, key.CredentialAsJson);
-
-
-        // TODO: validate & update signature counter
         
-        
+        await keyStore.UpdateCounter(key.CredentialId, authenticatorData.SignCount);
+
+        return FidoAuthenticationResult.Success(key, authenticatorData);
     }
 }

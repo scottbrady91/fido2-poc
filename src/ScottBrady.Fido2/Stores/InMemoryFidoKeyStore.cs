@@ -16,6 +16,18 @@ public class InMemoryFidoKeyStore : IFidoKeyStore
     public static readonly IList<FidoKey> Keys = new List<FidoKey>();
 
     /// <inheritdoc />
+    public Task<FidoKey> GetByUsername(string username)
+    {
+        FidoKey key;
+        lock (Keys)
+        {
+            key = Keys.FirstOrDefault(x => x.Username == username);
+        }
+
+        return Task.FromResult(key);
+    }
+    
+    /// <inheritdoc />
     public Task<FidoKey> GetByCredentialId(byte[] credentialId)
     {
         FidoKey key;
@@ -41,6 +53,21 @@ public class InMemoryFidoKeyStore : IFidoKeyStore
             Keys.Add(key);
         }
         
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task UpdateCounter(byte[] credentialId, int counter)
+    {
+        lock (Keys)
+        {
+            var key = Keys.FirstOrDefault(x => x.CredentialId.SequenceEqual(credentialId));
+            if (key == null) throw new FidoException("Could not update counter - unable to find key");
+
+            key.Counter = counter;
+            key.LastUsed = DateTime.UtcNow;
+        }
+
         return Task.CompletedTask;
     }
 }

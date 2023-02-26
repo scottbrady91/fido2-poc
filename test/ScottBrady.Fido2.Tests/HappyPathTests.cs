@@ -76,7 +76,7 @@ public class HappyPathTests
             User = new PublicKeyCredentialUserEntity { Id = RandomNumberGenerator.GetBytes(32),Name = "Scott", DisplayName = "Scott"}
         });
         
-        var sut = new FidoRegistrationService(optionsStore);
+        var sut = new FidoRegistrationService(optionsStore, new FidoOptions());
         
         await sut.Complete(new PublicKeyCredential
         {
