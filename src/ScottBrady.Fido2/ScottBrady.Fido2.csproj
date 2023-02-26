@@ -8,8 +8,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="PeterO.Cbor" Version="4.5.2" />
-      <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.27.0" />
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="PeterO.Cbor" Version="4.5.2" />
+        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.27.0" />
     </ItemGroup>
 
 </Project>

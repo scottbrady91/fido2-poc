@@ -1,23 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Formats.Asn1;
-using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using Microsoft.IdentityModel.Tokens;
 
 namespace ScottBrady.Fido2.Cryptography;
 
-public class FidoSignatureValidator
+/// <summary>
+/// FIDO signature validator.
+/// </summary>
+public interface IFidoSignatureValidator
+{
+    /// <summary>
+    /// Validates a FIDO signature
+    /// </summary>
+    /// <param name="data">The parsed data to validate the signature against. This is a concatenation of the authenticator data and a SHA-256 hash of the client data.</param>
+    /// <param name="signature">The signature generated during the authentication ceremony.</param>
+    /// <param name="keyAsJson">The stored public key in a JSON format, using COSE identifiers.</param>
+    /// <returns></returns>
+    Task ValidateSignature(byte[] data, byte[] signature, string keyAsJson);
+}
+
+/// <inheritdoc />
+public class FidoSignatureValidator : IFidoSignatureValidator
 {
     private IEnumerable<ISignatureValidationStrategy> validators = new List<ISignatureValidationStrategy>();
 
+    /// <inheritdoc />
     public Task ValidateSignature(byte[] data, byte[] signature, string keyAsJson)
     {
         var jsonNode = JsonNode.Parse(keyAsJson);
         var kty = jsonNode["1"]?.GetValue<int>();
         
-        // TODO: parse key (deserialize and validate in validator)
+        // TODO: parse key (deserialize and validate in validator? Or before? Should this be on load from the store?)
         
         // TODO: move signature concatenation here?
 
@@ -29,86 +43,5 @@ public class FidoSignatureValidator
         if (!isValid) throw new Exception("sig issue");
 
         return Task.CompletedTask;
-    }
-}
-
-public interface ISignatureValidationStrategy
-{
-    bool ValidateSignature(ReadOnlySpan<byte> data, byte[] signature, string keyAsJson);
-}
-
-public class EcdsaSignatureValidationStrategy : ISignatureValidationStrategy
-{
-    public bool ValidateSignature(ReadOnlySpan<byte> data, byte[] signature, string keyAsJson)
-    {
-        var jsonNode = JsonNode.Parse(keyAsJson);
-        if (jsonNode == null) throw new Exception("unable to load json");
-        
-        var kty = jsonNode["1"]?.GetValue<int>(); // TODO: pull COSE keys into constants
-        var alg = jsonNode["3"]?.GetValue<int>();
-        var crv = jsonNode["-1"]?.GetValue<int>();
-        
-        var x = jsonNode["-2"]?.GetValue<string>();
-        var y = jsonNode["-3"]?.GetValue<string>();
-        
-        var parameters = new ECParameters
-        {
-            Curve = ECCurve.NamedCurves.nistP256, // TODO: map curve & hashing algorithm from COSE alg value
-            Q = new ECPoint
-            {
-                X = Base64UrlEncoder.DecodeBytes(x),
-                Y = Base64UrlEncoder.DecodeBytes(y)
-            }
-        };
-
-        using var ecDsa = ECDsa.Create(parameters);
-        return ecDsa.VerifyData(data, DeserializeSignature(signature), HashAlgorithmName.SHA256);
-    }
-    
-    // https://www.w3.org/TR/webauthn-2/#sctn-fido-u2f-sig-format-compat
-    public byte[] DeserializeSignature(byte[] signature)
-    {
-        var reader = new AsnReader(signature, AsnEncodingRules.DER);
-        
-        var sequence = reader.ReadSequence(Asn1Tag.Sequence);
-        var r = sequence.ReadIntegerBytes(Asn1Tag.Integer);
-        var s = sequence.ReadIntegerBytes(Asn1Tag.Integer);
-
-        // remove negative flags
-        if (r.Span[0] == 0x0) r = r[1..];
-        if (s.Span[0] == 0x0) s = s[1..];
-
-        // combine r and s
-        var parsedSignature = new byte[r.Length + s.Length];
-        r.Span.CopyTo(parsedSignature);
-        s.Span.CopyTo(parsedSignature.AsSpan()[r.Length..]);
-
-        return parsedSignature;
-    }
-    
-    // TODO: `validate key` helper method?
-}
-
-public class RsaSignatureValidationStrategy : ISignatureValidationStrategy
-{
-    public bool ValidateSignature(ReadOnlySpan<byte> data, byte[] signature, string keyAsJson)
-    {
-        var jsonNode = JsonNode.Parse(keyAsJson);
-        if (jsonNode == null) throw new Exception("unable to load json");
-        
-        var kty = jsonNode["1"]?.GetValue<int>(); // TODO: pull COSE keys into constants
-        var alg = jsonNode["3"]?.GetValue<int>();
-        
-        var modulus = jsonNode["-1"]?.GetValue<string>();
-        var exponent = jsonNode["-2"]?.GetValue<string>();
-        
-        var parameters = new RSAParameters
-        {
-            Modulus = Base64UrlEncoder.DecodeBytes(modulus),
-            Exponent = Base64UrlEncoder.DecodeBytes(exponent)
-        };
-
-        using var rsa = RSA.Create(parameters);
-        return rsa.VerifyData(data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
     }
 }

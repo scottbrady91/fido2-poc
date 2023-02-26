@@ -7,6 +7,8 @@ using ScottBrady.Fido2.Models;
 using ScottBrady.Fido2.Stores;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddWebAuthn(options => options.RelyingPartyName = "SB Test");
+
 var app = builder.Build();
 
 app.UseDeveloperExceptionPage();
@@ -14,27 +16,28 @@ app.UseDeveloperExceptionPage();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-app.MapGet("/fido/register", async () =>
+app.MapGet("/fido/register", async (FidoRegistrationService registrationService) =>
 {
-    var options = await new FidoRegistrationService(new InMemoryFidoOptionsStore(), new FidoOptions()).Initiate(new FidoRegistrationRequest("Scott", "Scott - test (minimal API)"));
+    var options = await registrationService.Initiate(new FidoRegistrationRequest("Scott", "Scott - test (minimal API)"));
     return Results.Json(options, new JsonSerializerOptions{Converters = { new IntArrayJsonConverter() }, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, PropertyNameCaseInsensitive = true}, statusCode: 200);
 });
 
-app.MapPost("/fido/register", async (PublicKeyCredential response) =>
+app.MapPost("/fido/register", async (PublicKeyCredential response, FidoRegistrationService registrationService) =>
 {
-    // TODO: use PublicKeyCredential
-    await new FidoRegistrationService(new InMemoryFidoOptionsStore(), new FidoOptions()).Complete(response);
+    var result = await new FidoRegistrationService(new InMemoryFidoOptionsStore(), new FidoOptions()).Complete(response);
+    return Results.Json(result);
 });
 
-app.MapGet("/fido/authenticate", async () =>
+app.MapGet("/fido/authenticate", async (FidoAuthenticationService authenticationService) =>
 {
-    var options = await new FidoAuthenticationService(new InMemoryFidoOptionsStore(), new InMemoryFidoKeyStore()).Initiate(new FidoAuthenticationRequest("Scott"));
+    var options = await authenticationService.Initiate(new FidoAuthenticationRequest("Scott"));
     return Results.Json(options, new JsonSerializerOptions{Converters = { new IntArrayJsonConverter() }, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, PropertyNameCaseInsensitive = true}, statusCode: 200);
 });
 
-app.MapPost("/fido/authenticate", async (PublicKeyCredential credential) =>
+app.MapPost("/fido/authenticate", async (PublicKeyCredential credential, FidoAuthenticationService authenticationService) =>
 {
-    await new FidoAuthenticationService(new InMemoryFidoOptionsStore(), new InMemoryFidoKeyStore()).Complete(credential);
+    var result = await authenticationService.Complete(credential);
+    return Results.Json(result);
 });
 
 app.Run();
