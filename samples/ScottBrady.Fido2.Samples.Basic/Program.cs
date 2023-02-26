@@ -1,7 +1,8 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using ScottBrady.Fido2;
 using ScottBrady.Fido2.Models;
-using ScottBrady.Fido2.Samples.Basic;
 using ScottBrady.Fido2.Stores;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,7 +23,7 @@ app.MapGet("/fido/register", async () =>
 app.MapPost("/fido/register", async (PublicKeyCredential response) =>
 {
     // TODO: use PublicKeyCredential
-    await new FidoRegistrationService(new InMemoryFidoOptionsStore()).Complete(response.Response.ClientDataJson, response.Response.AttestationObject);
+    await new FidoRegistrationService(new InMemoryFidoOptionsStore()).Complete(response.Response.ClientDataJson, (response.Response as AuthenticatorAttestationResponse).AttestationObject);
 });
 
 app.MapGet("/fido/authenticate", async () =>

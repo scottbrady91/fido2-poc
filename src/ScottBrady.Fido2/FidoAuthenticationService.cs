@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Microsoft.IdentityModel.Tokens;
 using ScottBrady.Fido2.Models;
 using ScottBrady.Fido2.Parsers;
 using ScottBrady.Fido2.Stores;
@@ -41,6 +43,36 @@ public class FidoAuthenticationService
         await optionsStore.Store(options);
 
         return options;
+    }
+
+    // TODO: what about Id & RawId & type? This is only accepting the response
+    // TODO: wrapper for options that includes custom data (e.g. expected user handle & device name during registration)
+    public async Task Complete(PublicKeyCredential credential)
+    {
+        if (credential.Response is not AuthenticatorAssertionResponse response) throw new Exception("Incorrect response");
+        var clientData = clientDataParser.Parse(response.ClientDataJson);
+        
+        // TODO: remove Microsoft.IdentityModel dependency
+        var challenge = Base64UrlEncoder.DecodeBytes(clientData.Challenge);
+        var options = await optionsStore.TakeAuthenticationOptions(challenge);
+        if (options == null) throw new Exception("Incorrect options");
+        
+        // TODO: verify all allowed credentials
+        if (options.AllowCredentials.Any())
+        {
+            //
+        }
+        
+        var key = await keyStore.GetByCredentialId(Base64UrlEncoder.DecodeBytes(credential.Id));
+        if (key == null) throw new Exception("Incorrect key");
+        
+        // TODO: verify user handle
+        // known during auth: confirm owner of key
+        // unknown during auth: confirm present and owner of key
+
+        
+        
+        
     }
 }
 

@@ -60,7 +60,8 @@ public class FidoRegistrationService
         // TODO: remove Microsoft.IdentityModel dependency
         var challenge = Base64UrlEncoder.DecodeBytes(parsedClientData.Challenge);
         var options = await optionsStore.TakeRegistrationOptions(challenge);
-
+        if (options == null) throw new Exception("Incorrect options");
+        
         if (parsedClientData.Type != "webauthn.create") throw new Exception("Incorrect type");
         if (!challenge.SequenceEqual(options.Challenge)) throw new Exception("Incorrect challenge");
         if (parsedClientData.Origin != "https://localhost:5000") throw new Exception("Incorrect origin");
