@@ -1,5 +1,7 @@
 ﻿using FluentAssertions;
+using ScottBrady.Fido2.Models;
 using ScottBrady.Fido2.Parsers;
+using ScottBrady.Fido2.Stores;
 using Xunit;
 
 namespace ScottBrady.Fido2.Tests;
@@ -50,7 +52,10 @@ public class HappyPathTests
     [Fact]
     public void FidoRegistrationService_CompleteRegistration()
     {
-        var sut = new FidoRegistrationService();
-        sut.CompleteRegistration(testChallenge, testClientDataJson, testAttestationObject);
+        var optionsStore = new InMemoryFidoOptionsStore();
+        optionsStore.Store(new FidoRegistrationOptions { Challenge = testChallenge });
+        var sut = new FidoRegistrationService(optionsStore);
+        
+        sut.CompleteRegistration(testClientDataJson, testAttestationObject);
     }
 }

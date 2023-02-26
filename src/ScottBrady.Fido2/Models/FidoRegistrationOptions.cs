@@ -11,6 +11,8 @@ namespace ScottBrady.Fido2.Models;
 /// </remarks>
 public class FidoRegistrationOptions
 {
+    // TODO: constructor to enforce required fields
+    
     /// <inheritdoc cref="RelyingParty" />
     public RelyingParty RelyingParty { get; set; }
     
