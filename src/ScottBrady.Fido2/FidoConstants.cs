@@ -122,4 +122,21 @@ public static class FidoConstants
         /// </summary>
         public const string Enterprise = "enterprise";
     }
+
+    /// <summary>
+    /// The state of Token Binding for this request.
+    /// Values from <a href="https://www.w3.org/TR/webauthn-2/#enumdef-tokenbindingstatus">TokenBindingStatus</a>.
+    /// </summary>
+    public static class TokenBindingStatus
+    {
+        /// <summary>
+        /// Token Binding is supported but was not used.
+        /// </summary>
+        public const string Supported = "supported";
+
+        /// <summary>
+        /// Token Binding was used.
+        /// </summary>
+        public const string Present = "present";
+    }
 }

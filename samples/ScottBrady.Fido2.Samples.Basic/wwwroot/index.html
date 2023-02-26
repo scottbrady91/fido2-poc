@@ -1,66 +1,76 @@
 ﻿<h1>Click to register new (ES256 or RS256)</h1>
 <button onclick="register()">register</button>
 <button onclick="authenticate()">authenticate</button>
+<code id="result"></code>
 
 <script>
-    if (!window.PublicKeyCredential) { console.error("WebAuthn not supported by browser!") }
-    
+    if (!window.PublicKeyCredential) {
+        console.error("WebAuthn not supported by browser!")
+    }
+
     async function register() {
-        
+
         let response = await fetch("/fido/register");
         let options = await response.json();
         options.challenge = new Uint8Array(options.challenge);
         options.user.id = new Uint8Array(options.user.id);
         console.log("options:", options);
-        
-        navigator.credentials.create({ publicKey:{
-            challenge: options.challenge,
-            rp: options.rp,
-            user: options.user,
-            pubKeyCredParams: [
-                {
-                    type: "public-key",
-                    alg: -7 // "ES256" as registered in the IANA COSE Algorithms registry
-                },
-                {
-                    type: "public-key",
-                    alg: -257 // Value registered by this specification for "RS256"
-                }
-            ],
-            authenticatorSelection: {
-                // Try to use UV if possible. This is also the default.
-                userVerification: "preferred"
-            },
-            timeout: 360000,  // 6 minutes            
-        }}).then(async (credential) => {         
-            console.log(credential);
-            console.log("rawId", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))));
-            console.log("attestationObject", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))));
-            console.log("clientDataJSON", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON))));
 
-            await fetch("/fido/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    id: credential.id,
-                    rawId: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))),
-                    type: credential.type,
-                    // extensions: credential.getClientExtensionResults(),
-                    // transports: credential.response.getTransports(), 
-                    // authenticatorData: credential.response.getAuthenticatorData(),
-                    // publicKey: credential.response.getPublicKey(),
-                    // publicKeyAlgorithm: credential.response.getPublicKeyAlgorithm(),
-                    response: {
-                        attestationObject: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))),
-                        clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)))
+        let credential = await navigator.credentials.create({
+            publicKey: {
+                challenge: options.challenge,
+                rp: options.rp,
+                user: options.user,
+                pubKeyCredParams: [
+                    {
+                        type: "public-key",
+                        alg: -7 // "ES256" as registered in the IANA COSE Algorithms registry
+                    },
+                    {
+                        type: "public-key",
+                        alg: -257 // Value registered by this specification for "RS256"
                     }
-                })
-            })
-        }).catch((error) => {
-            console.error(error);
+                ],
+                authenticatorSelection: {
+                    // Try to use UV if possible. This is also the default.
+                    userVerification: "preferred"
+                },
+                timeout: 360000,  // 6 minutes            
+            }
         });
+
+        
+        console.log(credential);
+        console.log("rawId", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))));
+        console.log("attestationObject", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))));
+        console.log("clientDataJSON", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON))));
+
+        
+        let result = await fetch("/fido/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                id: credential.id,
+                rawId: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))),
+                type: credential.type,
+                // extensions: credential.getClientExtensionResults(),
+                // transports: credential.response.getTransports(), 
+                // authenticatorData: credential.response.getAuthenticatorData(),
+                // publicKey: credential.response.getPublicKey(),
+                // publicKeyAlgorithm: credential.response.getPublicKeyAlgorithm(),
+                response: {
+                    attestationObject: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))),
+                    clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)))
+                }
+            })
+        });
+        
+        if (result.ok) {
+            let output = document.getElementById("result");
+            output.innerText = "Registration complete";
+        }
     }
 
     async function authenticate() {
@@ -72,17 +82,20 @@
 
         // TODO: casing
         for (const allowCredential of options.AllowCredentials) {
-            allowCredential.id = new Uint8Array(allowCredential.Id) 
+            allowCredential.id = new Uint8Array(allowCredential.Id)
             allowCredential.type = allowCredential.Type
         }
-        
-        console.log(options.AllowCredentials);
-        
-        let credential = await navigator.credentials.get({ publicKey: {
-            challenge: options.challenge, 
-            allowCredentials: options.AllowCredentials
-        }});
 
+        console.log(options.AllowCredentials);
+
+        let credential = await navigator.credentials.get({
+            publicKey: {
+                challenge: options.challenge,
+                allowCredentials: options.AllowCredentials
+            }
+        });
+
+        
         console.log(credential);
         console.log("rawId", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))));
         console.log("authenticatorData", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.authenticatorData))));
@@ -90,8 +103,8 @@
         console.log("userHandle", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.userHandle))));
         console.log("clientDataJSON", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON))));
 
-        
-        await fetch("/fido/authenticate", {
+
+        let result = await fetch("/fido/authenticate", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -112,6 +125,11 @@
                     clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)))
                 }
             })
-        })
+        });
+
+        if (result.ok) {
+            let output = document.getElementById("result");
+            output.innerText = "Authentication complete";
+        }
     }
 </script>

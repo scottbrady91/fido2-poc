@@ -44,7 +44,7 @@ public class FidoRegistrationService
                 Name = request.Username,
                 DisplayName = request.UserDisplayName
             },
-            Challenge = RandomNumberGenerator.GetBytes(16),
+            Challenge = RandomNumberGenerator.GetBytes(32),
             DeviceDisplayName = request.DeviceDisplayName
         };
         
@@ -66,7 +66,7 @@ public class FidoRegistrationService
         if (clientData.Type != "webauthn.create") throw new Exception("Incorrect type");
         if (!challenge.SequenceEqual(options.Challenge)) throw new Exception("Incorrect challenge");
         if (clientData.Origin != "https://localhost:5000") throw new Exception("Incorrect origin");
-        if (clientData.TokenBinding != null && clientData.TokenBinding.Status == TokenBinding.TokenBindingStatus.Present) throw new Exception("Incorrect token binding"); 
+        if (clientData.TokenBinding != null && clientData.TokenBinding.Status == FidoConstants.TokenBindingStatus.Present) throw new Exception("Incorrect token binding"); 
         
         // TODO: hook for custom validation
 
@@ -104,5 +104,23 @@ public class FidoRegistrationService
         });
 
         // TODO: recommended to store transports alongside key (call getTransports()) to use in future allowCredentials options
+
+        new FidoRegistrationResult
+        {
+            IsSuccess = true,
+            UserId = options.User.Id,
+            Username = options.User.Name,
+            CredentialId = attestationObject.AuthenticatorData.CredentialId
+        };
     }
+}
+
+public class FidoRegistrationResult
+{
+    public bool IsSuccess { get; set; }
+    public string ErrorMessage { get; set; }
+    
+    public byte[] UserId { get; set; }
+    public string Username { get; set; }
+    public byte[] CredentialId { get; set; }
 }

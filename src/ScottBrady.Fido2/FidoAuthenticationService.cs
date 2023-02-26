@@ -16,7 +16,7 @@ namespace ScottBrady.Fido2;
 public class FidoAuthenticationService
 {
     private const string RpId = "localhost";
-    private readonly ClientDataParser clientDataParser = new ClientDataParser();
+    private readonly IClientDataParser clientDataParser = new ClientDataParser();
     private readonly AuthenticatorDataParser authenticatorDataParser = new AuthenticatorDataParser();
     
     private readonly IFidoOptionsStore optionsStore;
@@ -34,12 +34,14 @@ public class FidoAuthenticationService
         // TODO: global RPID
         // TODO: set/override extensions?
 
+        // TODO: lookup key by username :(
+        
         // test code - for hardcoded user, single key in system
         var key = InMemoryFidoKeyStore.Keys.First();
 
         var options = new PublicKeyCredentialRequestOptions
         {
-            Challenge = RandomNumberGenerator.GetBytes(16),
+            Challenge = RandomNumberGenerator.GetBytes(32),
             RpId = RpId,
             AllowCredentials = new []{new PublicKeyCredentialDescriptor{Id = key.CredentialId, Type = "public-key"}},
             // TODO: make AllowCredentials optional??? Required when you know the user? Try again later...
@@ -51,7 +53,6 @@ public class FidoAuthenticationService
         return options;
     }
 
-    // TODO: what about Id & RawId & type? This is only accepting the response
     // TODO: wrapper for options that includes custom data (e.g. expected user handle & device name during registration)
     public async Task Complete(PublicKeyCredential credential)
     {
@@ -71,6 +72,10 @@ public class FidoAuthenticationService
         
         var key = await keyStore.GetByCredentialId(Base64UrlEncoder.DecodeBytes(credential.Id));
         if (key == null) throw new Exception("Incorrect key");
+
+        // TODO: also validate against user identified
+        if (response.UserHandle != null && !response.UserHandle.SequenceEqual(key.UserId)) throw new Exception("Incorrect key for user");
+        
         
         // TODO: verify user handle
         // known during auth: confirm owner of key
@@ -79,14 +84,14 @@ public class FidoAuthenticationService
         if (clientData.Type != "webauthn.get") throw new Exception("Incorrect type");
         if (!challenge.SequenceEqual(options.Challenge)) throw new Exception("Incorrect challenge");
         if (clientData.Origin != "https://localhost:5000") throw new Exception("Incorrect origin");
-        if (clientData.TokenBinding != null && clientData.TokenBinding.Status == TokenBinding.TokenBindingStatus.Present) throw new Exception("Incorrect token binding");
+        if (clientData.TokenBinding != null && clientData.TokenBinding.Status == FidoConstants.TokenBindingStatus.Present) throw new Exception("Incorrect token binding");
 
         var authenticatorData = authenticatorDataParser.Parse(response.AuthenticatorData);
         if (!SHA256.HashData(Encoding.UTF8.GetBytes(RpId)).SequenceEqual(authenticatorData.RpIdHash)) throw new Exception("Incorrect RP ID");
         
         if (authenticatorData.UserPresent == false) throw new Exception("Incorrect user present");
         
-        // TODO: check if user verified required
+        if (options.UserVerification == FidoConstants.UserVerificationRequirement.Required && !authenticatorData.UserVerified) throw new Exception("Incorrect UV");
         
         // TODO: hook to validate extensions?
 
@@ -95,7 +100,6 @@ public class FidoAuthenticationService
         response.AuthenticatorData.CopyTo(dataToValidate, 0);
         hash.CopyTo(dataToValidate, response.AuthenticatorData.Length);
         
-        // TODO: validate signature
         var signatureValidator = new FidoSignatureValidator();
         await signatureValidator.ValidateSignature(dataToValidate, response.Signature, key.CredentialAsJson);
 
