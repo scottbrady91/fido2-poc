@@ -1,4 +1,6 @@
-﻿namespace ScottBrady.Fido2.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace ScottBrady.Fido2.Models;
 
 /// <summary>
 /// The relying party (web application) details used when creating a new credential.
@@ -16,6 +18,7 @@ public class PublicKeyCredentialRpEntity
     /// If not provided, defaults to the origin's effective domain.
     /// </summary>
     /// <example>login.example.com</example>
+    [JsonPropertyName("id")]
     public string Id { get; set; }
 
     /// <summary>
@@ -24,5 +27,6 @@ public class PublicKeyCredentialRpEntity
     /// <para>May be truncated by the authenticator if over 64-bytes.</para>
     /// </summary>
     /// <example>ACME Corp</example>
+    [JsonPropertyName("name")]
     public string Name { get; set; }
 }

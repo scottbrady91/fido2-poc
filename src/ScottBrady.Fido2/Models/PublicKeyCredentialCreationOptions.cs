@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace ScottBrady.Fido2.Models;
 
@@ -14,9 +15,11 @@ public class PublicKeyCredentialCreationOptions
     // TODO: constructor to enforce required fields
     
     /// <inheritdoc cref="PublicKeyCredentialRpEntity" />
+    [JsonPropertyName("rp")]
     public PublicKeyCredentialRpEntity Rp { get; set; }
     
     /// <inheritdoc cref="PublicKeyCredentialUserEntity"/>
+    [JsonPropertyName("user")]
     public PublicKeyCredentialUserEntity User { get; set; }
 
     /// <summary>
@@ -51,11 +54,18 @@ public class PublicKeyCredentialCreationOptions
     /// <para>Unknown values will be ignored by the client (WebAuthn API).</para>
     /// <para>Defaults to "none".</para>
     /// </summary>
-    public string AttestationConveyancePreference { get; set; } = "none";
+    public string AttestationConveyancePreference { get; set; } = FidoConstants.AttestationConveyancePreference.None;
 
     /// <summary>
     /// Additional parameters for the client (WebAuthn API) and authenticator.
     /// See <a href="https://www.w3.org/TR/webauthn-2/#sctn-extension-request-parameters">W3C spec</a> for more details.
     /// </summary>
     public Dictionary<string, object> Extensions { get; set; } = null;
+    
+    /// <summary>
+    /// Optional custom field for a human-readable name for the authenticator.
+    /// Allows the user to identify what authenticators they have registered at the relying party (web server).
+    /// Can be set by the user during or after registration.
+    /// </summary>
+    public string DeviceDisplayName { get; set; }
 }

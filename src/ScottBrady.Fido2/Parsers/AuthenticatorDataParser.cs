@@ -31,7 +31,7 @@ public class AuthenticatorDataParser
             var credentialIdLength = BitConverter.ToUInt16(ms.ReadBytes(2).Reverse().ToArray());
             parsedData.CredentialId = ms.ReadBytes(credentialIdLength);
                 
-            parsedData.CredentialPublicKey = CBORObject.Read(ms); // TODO: CBOR to JSON or object?
+            parsedData.CredentialPublicKeyAsJson = CBORObject.Read(ms).ToJSONString();
         }
 
         if (parsedData.ExtensionDataIncluded)

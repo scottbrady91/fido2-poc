@@ -64,7 +64,7 @@ public class AuthenticatorData
     /// <summary>
     /// The public key bound to the authenticator, scoped to this relying party (web server).
     /// </summary>
-    public CBORObject CredentialPublicKey { get; set; }
+    public string CredentialPublicKeyAsJson { get; set; }
     
     
     /// <summary>

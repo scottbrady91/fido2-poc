@@ -1,0 +1,76 @@
+﻿<h1>Click to register new (no server)</h1>
+<button onclick="register()">register</button>
+
+<script>
+    if (!window.PublicKeyCredential) { console.error("WebAuthn not supported by browser!") }
+    
+    var options = null;
+    var createdCred = null
+    
+    async function register() {
+
+        let response = await fetch("/fido/register");
+        options = await response.json();
+        options.challenge = new Uint8Array(options.challenge);
+        options.user.id = new Uint8Array(options.user.id);
+        console.log("options:", options);
+        
+        let challenge = Uint8Array.from(atob("V2pRWnLOxb+7Q/Vc5B495Q=="), c=>c.charCodeAt(0))
+        console.log("challenge", challenge)
+        
+        navigator.credentials.create({ publicKey:{
+            challenge: options.challenge,
+            rp: options.rp,
+            /*user: {
+                id: Uint8Array.from(atob("MIIBkzCCATigAwIBAjCCAZMwggE4oAMCAQIwggGTMII="), c=>c.charCodeAt(0)),
+                name: "scott@scottbrady91.com",
+                displayName: "Scott's test",
+            },*/
+            user: options.user,
+            pubKeyCredParams: [
+                {
+                    type: "public-key",
+                    alg: -7 // "ES256" as registered in the IANA COSE Algorithms registry
+                },
+                {
+                    type: "public-key",
+                    alg: -257 // Value registered by this specification for "RS256"
+                }
+            ],
+            authenticatorSelection: {
+                // Try to use UV if possible. This is also the default.
+                userVerification: "preferred"
+            },
+            timeout: 360000,  // 6 minutes            
+        }}).then(async (credential) => {
+            createdCred = credential;            
+            console.log(credential);
+            console.log("rawId", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))));
+            console.log("attestationObject", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))));
+            console.log("clientDataJSON", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON))));
+
+            await fetch("/fido/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    id: credential.id,
+                    rawId: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))),
+                    type: credential.type,
+                    // extensions: credential.getClientExtensionResults(),
+                    // transports: credential.response.getTransports(), 
+                    // authenticatorData: credential.response.getAuthenticatorData(),
+                    // publicKey: credential.response.getPublicKey(),
+                    // publicKeyAlgorithm: credential.response.getPublicKeyAlgorithm(),
+                    response: {
+                        AttestationObject: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))),
+                        clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)))
+                    }
+                })
+            })
+        }).catch((error) => {
+            console.error(error);
+        });
+    }
+</script>

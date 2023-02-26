@@ -43,7 +43,7 @@ public class HappyPathTests
 
         attestationObject.AuthenticatorData.Aaguid.Should().BeEquivalentTo(Convert.FromBase64String("AAAAAAAAAAAAAAAAAAAAAA=="));
         attestationObject.AuthenticatorData.CredentialId.Should().BeEquivalentTo(Convert.FromBase64String("JWsmdgm6l3wRbHApBW4Ym6HpGsIMRgMy+U0P3DDrupE="));
-        attestationObject.AuthenticatorData.CredentialPublicKey.ToJSONString().Should().Be(
+        attestationObject.AuthenticatorData.CredentialPublicKeyAsJson.Should().Be(
             "{\"1\":2,\"3\":-7,\"-1\":1,\"-2\":\"gPc5mrgc7Z0IotWxtigJ3BICGByjGcwE9XlKLSvIFow\",\"-3\":\"oXBwitSsaA4PKUEIfMAHcDQLFgkgqdqNZMcJ3gXKETY\"}");
 
         attestationObject.AuthenticatorData.Extensions.Should().BeNull();
@@ -56,6 +56,6 @@ public class HappyPathTests
         optionsStore.Store(new PublicKeyCredentialCreationOptions { Challenge = testChallenge });
         var sut = new FidoRegistrationService(optionsStore);
         
-        sut.CompleteRegistration(testClientDataJson, testAttestationObject);
+        sut.Complete(testClientDataJson, testAttestationObject);
     }
 }

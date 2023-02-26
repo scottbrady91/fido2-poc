@@ -26,12 +26,11 @@ public class FidoRegistrationService
         this.optionsStore = optionsStore ?? throw new ArgumentNullException(nameof(optionsStore));
     }
     
-    public async Task<PublicKeyCredentialCreationOptions> StartRegistration(FidoRegistrationRequest request)
+    public async Task<PublicKeyCredentialCreationOptions> Initiate(FidoRegistrationRequest request)
     {
-        // inputs: user
-        // global: relying party
-        // overrides: timeout, algs (PublicKeyCredentialParameters), excludeCredentials?, authenticatorSelection???, attestation preference, extensions (pass though?)
-        
+        // TODO: global: relying party
+        // TODO: overrides: timeout, algs (PublicKeyCredentialParameters), excludeCredentials?, authenticatorSelection???, attestation preference, extensions (pass though?)
+
         var options = new PublicKeyCredentialCreationOptions
         {
             Rp = new PublicKeyCredentialRpEntity
@@ -42,10 +41,11 @@ public class FidoRegistrationService
             User = new PublicKeyCredentialUserEntity
             {
                 Id = RandomNumberGenerator.GetBytes(32),
-                Name = "Scott",
-                DisplayName = "Scott Brady - test"
+                Name = request.Username,
+                DisplayName = request.UserDisplayName
             },
-            Challenge = RandomNumberGenerator.GetBytes(16)
+            Challenge = RandomNumberGenerator.GetBytes(16),
+            DeviceDisplayName = request.DeviceDisplayName
         };
         
         await optionsStore.Store(options);
@@ -53,7 +53,7 @@ public class FidoRegistrationService
         return options;
     }
     
-    public async Task CompleteRegistration(byte[] clientDataJson, byte[] attestationObject)
+    public async Task Complete(byte[] clientDataJson, byte[] attestationObject)
     {
         var parsedClientData = clientDataParser.Parse(clientDataJson);
 
@@ -61,23 +61,23 @@ public class FidoRegistrationService
         var challenge = Base64UrlEncoder.DecodeBytes(parsedClientData.Challenge);
         var options = await optionsStore.TakeRegistrationOptions(challenge);
 
-        if (parsedClientData.Type != "webauthn.create") throw new Exception();
-        if (!challenge.SequenceEqual(options.Challenge)) throw new Exception();
-        if (parsedClientData.Origin != "https://localhost:5000") throw new Exception();
-        if (parsedClientData.TokenBinding != null && parsedClientData.TokenBinding.Status == TokenBinding.TokenBindingStatus.Present) throw new Exception(); // unsupported 
+        if (parsedClientData.Type != "webauthn.create") throw new Exception("Incorrect type");
+        if (!challenge.SequenceEqual(options.Challenge)) throw new Exception("Incorrect challenge");
+        if (parsedClientData.Origin != "https://localhost:5000") throw new Exception("Incorrect origin");
+        if (parsedClientData.TokenBinding != null && parsedClientData.TokenBinding.Status == TokenBinding.TokenBindingStatus.Present) throw new Exception("Incorrect token binding"); 
         
         // TODO: hook for custom validation
 
         var parsedAttestationObject = attestationObjectParser.Parse(attestationObject);
-        if (parsedAttestationObject.StatementFormat != "none") throw new Exception();
-        if (parsedAttestationObject.Statement.Count != 0) throw new Exception();
+        if (parsedAttestationObject.StatementFormat != "none") throw new Exception("Incorrect statement format");
+        if (parsedAttestationObject.Statement.Count != 0) throw new Exception("Incorrect statement count");
         
         // var clientDataHash = SHA256.HashData(clientDataJson); // used for attestation statement validation
         // TODO: hook for attestation validation?
 
-        if (!SHA256.HashData(Encoding.UTF8.GetBytes(RpId)).SequenceEqual(parsedAttestationObject.AuthenticatorData.RpIdHash)) throw new Exception();
+        if (!SHA256.HashData(Encoding.UTF8.GetBytes(RpId)).SequenceEqual(parsedAttestationObject.AuthenticatorData.RpIdHash)) throw new Exception("Incorrect RP ID");
 
-        if (parsedAttestationObject.AuthenticatorData.UserPresent == false) throw new Exception();
+        if (parsedAttestationObject.AuthenticatorData.UserPresent == false) throw new Exception("Incorrect user present");
         
         // requires full options support
         // TODO: check if user verified required
@@ -87,20 +87,20 @@ public class FidoRegistrationService
         
         // validate credential ID is not registered to a different user (either fail or remove old registration)
         var existingCredential = await keyStore.GetByCredentialId(parsedAttestationObject.AuthenticatorData.CredentialId);
-        if (existingCredential != null) throw new Exception();
+        if (existingCredential != null) throw new Exception("Incorrect credential ID");
 
+        // TODO: validate credential alg is supported by library
+        
         // store key
         await keyStore.Store(new FidoKey
         {
             UserId = options.User.Id,
+            DeviceFriendlyName = options.DeviceDisplayName,
             CredentialId = parsedAttestationObject.AuthenticatorData.CredentialId,
-            // TODO: DeviceFriendlyName = ???
             Counter = parsedAttestationObject.AuthenticatorData.SignCount,
-            // TODO: CredentialAsJson = ???
+            CredentialAsJson = parsedAttestationObject.AuthenticatorData.CredentialPublicKeyAsJson
         });
 
         // TODO: recommended to store transports alongside key (call getTransports()) to use in future allowCredentials options
-        
-        
     }
 }
