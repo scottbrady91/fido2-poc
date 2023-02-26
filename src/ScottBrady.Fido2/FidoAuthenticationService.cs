@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
+using ScottBrady.Fido2.Cryptography;
 using ScottBrady.Fido2.Models;
 using ScottBrady.Fido2.Parsers;
 using ScottBrady.Fido2.Stores;
@@ -90,10 +91,15 @@ public class FidoAuthenticationService
         // TODO: hook to validate extensions?
 
         var hash = SHA256.HashData(response.ClientDataJson);
+        var dataToValidate = new byte[response.AuthenticatorData.Length + hash.Length];
+        response.AuthenticatorData.CopyTo(dataToValidate, 0);
+        hash.CopyTo(dataToValidate, response.AuthenticatorData.Length);
         
         // TODO: validate signature
-        
-        
+        var signatureValidator = new FidoSignatureValidator();
+        await signatureValidator.ValidateSignature(dataToValidate, response.Signature, key.CredentialAsJson);
+
+
         // TODO: validate & update signature counter
 
     }
