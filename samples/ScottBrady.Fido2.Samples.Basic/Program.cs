@@ -16,14 +16,13 @@ app.UseStaticFiles();
 app.MapGet("/fido/register", async () =>
 {
     var options = await new FidoRegistrationService(new InMemoryFidoOptionsStore()).Initiate(new FidoRegistrationRequest("Scott", "Scott - test (minimal API)"));
-    
     return Results.Json(options, new JsonSerializerOptions{Converters = { new IntArrayJsonConverter() }, PropertyNameCaseInsensitive = true}, statusCode: 200);
 });
 
 app.MapPost("/fido/register", async (PublicKeyCredential response) =>
 {
     // TODO: use PublicKeyCredential
-    await new FidoRegistrationService(new InMemoryFidoOptionsStore()).Complete(response.Response.ClientDataJson, (response.Response as AuthenticatorAttestationResponse).AttestationObject);
+    await new FidoRegistrationService(new InMemoryFidoOptionsStore()).Complete(response);
 });
 
 app.MapGet("/fido/authenticate", async () =>

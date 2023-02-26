@@ -53,32 +53,33 @@ public class FidoRegistrationService
         return options;
     }
     
-    public async Task Complete(byte[] clientDataJson, byte[] attestationObject)
+    public async Task Complete(PublicKeyCredential credential)
     {
-        var parsedClientData = clientDataParser.Parse(clientDataJson);
+        if (credential.Response is not AuthenticatorAttestationResponse response) throw new Exception("Incorrect response");
+        var clientData = clientDataParser.Parse(response.ClientDataJson);
 
         // TODO: remove Microsoft.IdentityModel dependency
-        var challenge = Base64UrlEncoder.DecodeBytes(parsedClientData.Challenge);
+        var challenge = Base64UrlEncoder.DecodeBytes(clientData.Challenge);
         var options = await optionsStore.TakeRegistrationOptions(challenge);
         if (options == null) throw new Exception("Incorrect options");
         
-        if (parsedClientData.Type != "webauthn.create") throw new Exception("Incorrect type");
+        if (clientData.Type != "webauthn.create") throw new Exception("Incorrect type");
         if (!challenge.SequenceEqual(options.Challenge)) throw new Exception("Incorrect challenge");
-        if (parsedClientData.Origin != "https://localhost:5000") throw new Exception("Incorrect origin");
-        if (parsedClientData.TokenBinding != null && parsedClientData.TokenBinding.Status == TokenBinding.TokenBindingStatus.Present) throw new Exception("Incorrect token binding"); 
+        if (clientData.Origin != "https://localhost:5000") throw new Exception("Incorrect origin");
+        if (clientData.TokenBinding != null && clientData.TokenBinding.Status == TokenBinding.TokenBindingStatus.Present) throw new Exception("Incorrect token binding"); 
         
         // TODO: hook for custom validation
 
-        var parsedAttestationObject = attestationObjectParser.Parse(attestationObject);
-        if (parsedAttestationObject.StatementFormat != "none") throw new Exception("Incorrect statement format");
-        if (parsedAttestationObject.Statement.Count != 0) throw new Exception("Incorrect statement count");
+        var attestationObject = attestationObjectParser.Parse(response.AttestationObject);
+        if (attestationObject.StatementFormat != "none") throw new Exception("Incorrect statement format");
+        if (attestationObject.Statement.Count != 0) throw new Exception("Incorrect statement count");
         
         // var clientDataHash = SHA256.HashData(clientDataJson); // used for attestation statement validation
         // TODO: hook for attestation validation?
 
-        if (!SHA256.HashData(Encoding.UTF8.GetBytes(RpId)).SequenceEqual(parsedAttestationObject.AuthenticatorData.RpIdHash)) throw new Exception("Incorrect RP ID");
+        if (!SHA256.HashData(Encoding.UTF8.GetBytes(RpId)).SequenceEqual(attestationObject.AuthenticatorData.RpIdHash)) throw new Exception("Incorrect RP ID");
 
-        if (parsedAttestationObject.AuthenticatorData.UserPresent == false) throw new Exception("Incorrect user present");
+        if (attestationObject.AuthenticatorData.UserPresent == false) throw new Exception("Incorrect user present");
         
         // requires full options support
         // TODO: check if user verified required
@@ -87,7 +88,7 @@ public class FidoRegistrationService
         // TODO: hook to validate extensions?
         
         // validate credential ID is not registered to a different user (either fail or remove old registration)
-        var existingCredential = await keyStore.GetByCredentialId(parsedAttestationObject.AuthenticatorData.CredentialId);
+        var existingCredential = await keyStore.GetByCredentialId(attestationObject.AuthenticatorData.CredentialId);
         if (existingCredential != null) throw new Exception("Incorrect credential ID");
 
         // TODO: validate credential alg is supported by library
@@ -97,9 +98,9 @@ public class FidoRegistrationService
         {
             UserId = options.User.Id,
             DeviceFriendlyName = options.DeviceDisplayName,
-            CredentialId = parsedAttestationObject.AuthenticatorData.CredentialId,
-            Counter = parsedAttestationObject.AuthenticatorData.SignCount,
-            CredentialAsJson = parsedAttestationObject.AuthenticatorData.CredentialPublicKeyAsJson
+            CredentialId = attestationObject.AuthenticatorData.CredentialId,
+            Counter = attestationObject.AuthenticatorData.SignCount,
+            CredentialAsJson = attestationObject.AuthenticatorData.CredentialPublicKeyAsJson
         });
 
         // TODO: recommended to store transports alongside key (call getTransports()) to use in future allowCredentials options

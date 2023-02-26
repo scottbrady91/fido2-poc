@@ -78,7 +78,16 @@ public class HappyPathTests
         
         var sut = new FidoRegistrationService(optionsStore);
         
-        await sut.Complete(RegistrationData.TestClientDataJson, RegistrationData.TestAttestationObject);
+        await sut.Complete(new PublicKeyCredential
+        {
+            Type = "public-key",
+            Response = new AuthenticatorAttestationResponse
+            {
+                AttestationObject = RegistrationData.TestAttestationObject,
+                ClientDataJson = RegistrationData.TestClientDataJson
+            }
+            
+        });
     }
 
     [Fact]
