@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using ScottBrady.Fido2.Cryptography;
 
 namespace ScottBrady.Fido2.Stores;
 
@@ -19,7 +20,7 @@ public class FidoKey
     public string DeviceFriendlyName { get; set; }
     
     public int Counter { get; set; }
-    public string CredentialAsJson { get; set; }
+    public CredentialPublicKey CredentialPublicKey { get; set; }
 
     public DateTime? Created { get; set; }
     public DateTime? LastUsed { get; set; }

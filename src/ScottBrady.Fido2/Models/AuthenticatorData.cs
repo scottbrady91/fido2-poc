@@ -1,4 +1,5 @@
 ﻿using PeterO.Cbor;
+using ScottBrady.Fido2.Cryptography;
 
 namespace ScottBrady.Fido2.Models;
 
@@ -64,7 +65,7 @@ public class AuthenticatorData
     /// <summary>
     /// The public key bound to the authenticator, scoped to this relying party (web server).
     /// </summary>
-    public string CredentialPublicKeyAsJson { get; set; }
+    public CredentialPublicKey CredentialPublicKey { get; set; }
     
     
     /// <summary>

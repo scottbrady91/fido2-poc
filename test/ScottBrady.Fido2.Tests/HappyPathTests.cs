@@ -1,5 +1,9 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
 using FluentAssertions;
+using ScottBrady.Fido2.Cryptography;
 using ScottBrady.Fido2.Models;
 using ScottBrady.Fido2.Parsers;
 using ScottBrady.Fido2.Stores;
@@ -60,7 +64,7 @@ public class HappyPathTests
 
         attestationObject.AuthenticatorData.Aaguid.Should().BeEquivalentTo(Convert.FromBase64String("AAAAAAAAAAAAAAAAAAAAAA=="));
         attestationObject.AuthenticatorData.CredentialId.Should().BeEquivalentTo(Convert.FromBase64String("JWsmdgm6l3wRbHApBW4Ym6HpGsIMRgMy+U0P3DDrupE="));
-        attestationObject.AuthenticatorData.CredentialPublicKeyAsJson.Should().Be(
+        attestationObject.AuthenticatorData.CredentialPublicKey.KeyAsJson.Should().Be(
             "{\"1\":2,\"3\":-7,\"-1\":1,\"-2\":\"gPc5mrgc7Z0IotWxtigJ3BICGByjGcwE9XlKLSvIFow\",\"-3\":\"oXBwitSsaA4PKUEIfMAHcDQLFgkgqdqNZMcJ3gXKETY\"}");
 
         attestationObject.AuthenticatorData.Extensions.Should().BeNull();
@@ -101,7 +105,7 @@ public class HappyPathTests
         {
             UserId = AuthenticationData.TestUserHandle,
             CredentialId = AuthenticationData.TestRawId,
-            CredentialAsJson = AuthenticationData.TestCredential,
+            CredentialPublicKey = new CredentialPublicKey(AuthenticationData.TestCredential),
             Counter = 0
         });
 

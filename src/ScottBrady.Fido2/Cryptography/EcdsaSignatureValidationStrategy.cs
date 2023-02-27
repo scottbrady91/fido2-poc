@@ -8,29 +8,9 @@ namespace ScottBrady.Fido2.Cryptography;
 
 public class EcdsaSignatureValidationStrategy : ISignatureValidationStrategy
 {
-    public bool ValidateSignature(ReadOnlySpan<byte> data, byte[] signature, string coseKeyAsJson)
+    public bool ValidateSignature(ReadOnlySpan<byte> data, byte[] signature, CredentialPublicKey key)
     {
-        var jsonNode = JsonNode.Parse(coseKeyAsJson);
-        if (jsonNode == null) throw new Exception("unable to load json");
-        
-        var kty = jsonNode["1"]?.GetValue<int>(); // TODO: pull COSE keys into constants
-        var alg = jsonNode["3"]?.GetValue<int>();
-        var crv = jsonNode["-1"]?.GetValue<int>();
-        
-        var x = jsonNode["-2"]?.GetValue<string>();
-        var y = jsonNode["-3"]?.GetValue<string>();
-        
-        var parameters = new ECParameters
-        {
-            Curve = ECCurve.NamedCurves.nistP256, // TODO: map curve & hashing algorithm from COSE alg value
-            Q = new ECPoint
-            {
-                X = Base64UrlEncoder.DecodeBytes(x),
-                Y = Base64UrlEncoder.DecodeBytes(y)
-            }
-        };
-
-        using var ecDsa = ECDsa.Create(parameters);
+        using var ecDsa = key.ToEcdsa();
         return ecDsa.VerifyData(data, DeserializeSignature(signature), HashAlgorithmName.SHA256);
     }
     

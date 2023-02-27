@@ -14,7 +14,6 @@ namespace ScottBrady.Fido2;
 public class FidoRegistrationService
 {
     private const string RpId = "localhost";
-    private const string RpName = "SB test 23";
     private readonly AttestationObjectParser attestationObjectParser = new AttestationObjectParser();
     private readonly ClientDataParser clientDataParser = new ClientDataParser();
 
@@ -74,8 +73,6 @@ public class FidoRegistrationService
         if (clientData.Origin != "https://localhost:5000") throw new Exception("Incorrect origin");
         if (clientData.TokenBinding != null && clientData.TokenBinding.Status == FidoConstants.TokenBindingStatus.Present) throw new Exception("Incorrect token binding"); 
         
-        // TODO: hook for custom validation
-
         var attestationObject = attestationObjectParser.Parse(response.AttestationObject);
         if (attestationObject.StatementFormat != "none") throw new Exception("Incorrect statement format");
         if (attestationObject.Statement.Count != 0) throw new Exception("Incorrect statement count");
@@ -91,28 +88,32 @@ public class FidoRegistrationService
         // TODO: check if user verified required
         // TODO: check if alg is allowed or was requested
         
+        
         // TODO: hook to validate extensions?
         
         // validate credential ID is not registered to a different user (either fail or remove old registration)
         var existingCredential = await keyStore.GetByCredentialId(attestationObject.AuthenticatorData.CredentialId);
         if (existingCredential != null) throw new Exception("Incorrect credential ID");
 
-        // TODO: validate credential alg is supported by library
+        // TODO: validate credential alg is supported by library (check strategy exists)
         
+        
+        // TODO: hook for custom validation (after core validate, before storage)
+
         // store key
         var key = new FidoKey
         {
             UserId = options.User.Id,
+            Username = options.User.Name,
             DeviceFriendlyName = options.DeviceDisplayName,
             CredentialId = attestationObject.AuthenticatorData.CredentialId,
             Counter = attestationObject.AuthenticatorData.SignCount,
-            CredentialAsJson = attestationObject.AuthenticatorData.CredentialPublicKeyAsJson
+            CredentialPublicKey = attestationObject.AuthenticatorData.CredentialPublicKey
         };
         await keyStore.Store(key);
 
         // TODO: recommended to store transports alongside key (call getTransports()) to use in future allowCredentials options
-
-
+        
         return FidoRegistrationResult.Success(key, attestationObject);
     }
 }

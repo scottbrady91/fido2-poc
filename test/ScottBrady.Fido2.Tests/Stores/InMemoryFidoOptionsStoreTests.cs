@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using System.Threading.Tasks;
 using FluentAssertions;
 using ScottBrady.Fido2.Models;
 using ScottBrady.Fido2.Stores;

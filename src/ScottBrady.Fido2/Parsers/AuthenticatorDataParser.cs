@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using PeterO.Cbor;
+using ScottBrady.Fido2.Cryptography;
 using ScottBrady.Fido2.Models;
 
 namespace ScottBrady.Fido2.Parsers;
@@ -31,7 +32,7 @@ public class AuthenticatorDataParser
             var credentialIdLength = BitConverter.ToUInt16(ms.ReadBytes(2).Reverse().ToArray());
             parsedData.CredentialId = ms.ReadBytes(credentialIdLength);
                 
-            parsedData.CredentialPublicKeyAsJson = CBORObject.Read(ms).ToJSONString();
+            parsedData.CredentialPublicKey = new CredentialPublicKey(CBORObject.Read(ms).ToJSONString());
         }
 
         if (parsedData.ExtensionDataIncluded)

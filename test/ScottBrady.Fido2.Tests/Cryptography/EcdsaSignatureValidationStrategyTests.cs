@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System;
+using FluentAssertions;
 using ScottBrady.Fido2.Cryptography;
 using Xunit;
 

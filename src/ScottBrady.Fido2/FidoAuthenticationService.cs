@@ -100,7 +100,7 @@ public class FidoAuthenticationService
         hash.CopyTo(dataToValidate, response.AuthenticatorData.Length);
         
         var signatureValidator = new FidoSignatureValidator();
-        await signatureValidator.ValidateSignature(dataToValidate, response.Signature, key.CredentialAsJson);
+        await signatureValidator.ValidateSignature(dataToValidate, response.Signature, key.CredentialPublicKey);
         
         await keyStore.UpdateCounter(key.CredentialId, authenticatorData.SignCount);
 
