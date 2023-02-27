@@ -8,9 +8,9 @@ namespace ScottBrady.Fido2.Cryptography;
 
 public class EcdsaSignatureValidationStrategy : ISignatureValidationStrategy
 {
-    public bool ValidateSignature(ReadOnlySpan<byte> data, byte[] signature, string keyAsJson)
+    public bool ValidateSignature(ReadOnlySpan<byte> data, byte[] signature, string coseKeyAsJson)
     {
-        var jsonNode = JsonNode.Parse(keyAsJson);
+        var jsonNode = JsonNode.Parse(coseKeyAsJson);
         if (jsonNode == null) throw new Exception("unable to load json");
         
         var kty = jsonNode["1"]?.GetValue<int>(); // TODO: pull COSE keys into constants
