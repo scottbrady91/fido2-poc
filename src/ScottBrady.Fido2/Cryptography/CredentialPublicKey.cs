@@ -21,6 +21,8 @@ public class CredentialPublicKey
         Algorithm = jsonNode[CoseConstants.Parameters.Alg]?.ToString();
     }
     
+    // TODO: consider using ints, not strings (value is always a string, even if not in CBOR?
+    
     /// <summary>
     /// The COSE key type.
     /// </summary>
@@ -36,46 +38,50 @@ public class CredentialPublicKey
     /// </summary>
     public string KeyAsJson { get; }
 
-    public ECDsa ToEcdsa()
+    public ECParameters LoadEcParameters()
     {
         // TODO: guards
         
         var jsonNode = JsonNode.Parse(KeyAsJson);
         if (jsonNode == null) throw new Exception("unable to load json");
 
-        var x = jsonNode["-2"]?.GetValue<string>();
-        var y = jsonNode["-3"]?.GetValue<string>();
+        var x = jsonNode[CoseConstants.Parameters.X]?.GetValue<string>();
+        var y = jsonNode[CoseConstants.Parameters.Y]?.GetValue<string>();
         
-        var parameters = new ECParameters
+        var crv = jsonNode[CoseConstants.Parameters.Crv]?.GetValue<string>();
+
+        return new ECParameters
         {
-            Curve = ECCurve.NamedCurves.nistP256, // TODO: map curve & hashing algorithm from COSE alg value
+            Curve = ParseCurve(crv),
             Q = new ECPoint
             {
                 X = Base64UrlEncoder.DecodeBytes(x),
                 Y = Base64UrlEncoder.DecodeBytes(y)
             }
         };
-
-        return ECDsa.Create(parameters);
     }
 
-    public RSA ToRsa()
+    private static ECCurve ParseCurve(string coseCurve) => coseCurve switch
+    {
+        CoseConstants.Algorithms.ES256 => ECCurve.NamedCurves.nistP256,
+        _ => throw new FidoException("Unsupported EC curve")
+    };
+
+    public RSAParameters LoadRsaParameters()
     {
         // TODO: guards
         
         var jsonNode = JsonNode.Parse(KeyAsJson);
         if (jsonNode == null) throw new Exception("unable to load json");
         
-        var modulus = jsonNode["-1"]?.GetValue<string>();
-        var exponent = jsonNode["-2"]?.GetValue<string>();
-        
-        var parameters = new RSAParameters
+        var modulus = jsonNode[CoseConstants.Parameters.N]?.GetValue<string>();
+        var exponent = jsonNode[CoseConstants.Parameters.E]?.GetValue<string>();
+
+        return new RSAParameters
         {
             Modulus = Base64UrlEncoder.DecodeBytes(modulus),
             Exponent = Base64UrlEncoder.DecodeBytes(exponent)
         };
-
-        return RSA.Create(parameters);
     }
 }
 

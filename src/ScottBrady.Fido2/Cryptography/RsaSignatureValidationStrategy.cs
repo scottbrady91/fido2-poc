@@ -9,7 +9,7 @@ public class RsaSignatureValidationStrategy : ISignatureValidationStrategy
 {
     public bool ValidateSignature(ReadOnlySpan<byte> data, byte[] signature, CredentialPublicKey key)
     {
-        using var rsa = key.ToRsa();
+        using var rsa = RSA.Create(key.LoadRsaParameters());
         return rsa.VerifyData(data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
     }
 }

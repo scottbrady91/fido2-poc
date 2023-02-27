@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -86,8 +86,11 @@ public class FidoRegistrationService
         
         // requires full options support
         // TODO: check if user verified required
-        // TODO: check if alg is allowed or was requested
+        // if (options.AuthenticatorSelection.UserVerification == FidoConstants.UserVerificationRequirement.Required)
         
+        // TODO: check if alg is allowed or was requested
+        if (options.PublicKeyCredentialParameters.Any(x => x.Algorithm.ToString() == attestationObject.AuthenticatorData.CredentialPublicKey.Algorithm))
+            throw new FidoException("Incorrect alg");
         
         // TODO: hook to validate extensions?
         

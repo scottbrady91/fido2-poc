@@ -10,7 +10,7 @@ public class EcdsaSignatureValidationStrategy : ISignatureValidationStrategy
 {
     public bool ValidateSignature(ReadOnlySpan<byte> data, byte[] signature, CredentialPublicKey key)
     {
-        using var ecDsa = key.ToEcdsa();
+        using var ecDsa = ECDsa.Create(key.LoadEcParameters());
         return ecDsa.VerifyData(data, DeserializeSignature(signature), HashAlgorithmName.SHA256);
     }
     
