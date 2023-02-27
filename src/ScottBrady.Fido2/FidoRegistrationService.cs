@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -34,6 +34,11 @@ public class FidoRegistrationService
 
         var options = new PublicKeyCredentialCreationOptions
         {
+            Rp = new PublicKeyCredentialRpEntity
+            {
+                Id = configurationOptions.RelyingPartyId,
+                Name = configurationOptions.RelyingPartyName,
+            },
             User = new PublicKeyCredentialUserEntity
             {
                 Id = RandomNumberGenerator.GetBytes(32),
@@ -41,7 +46,9 @@ public class FidoRegistrationService
                 DisplayName = request.UserDisplayName
             },
             Challenge = RandomNumberGenerator.GetBytes(32),
-            DeviceDisplayName = request.DeviceDisplayName
+            PublicKeyCredentialParameters = new []{new PublicKeyCredentialParameters{Type = "public-key", Algorithm = -7}, new PublicKeyCredentialParameters{Type = "public-key", Algorithm = -257}},
+            DeviceDisplayName = request.DeviceDisplayName,
+            
         };
 
         if (configurationOptions.RelyingPartyId is not null || configurationOptions.RelyingPartyName is not null)

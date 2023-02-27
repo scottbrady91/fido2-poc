@@ -1,4 +1,6 @@
-﻿namespace ScottBrady.Fido2.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace ScottBrady.Fido2.Models;
 
 /// <summary>
 /// The parameters to use when creating a new credential.
@@ -14,6 +16,7 @@ public class PublicKeyCredentialParameters
     /// <para>Unknown values will be ignored by the client (WebAuthn API).</para>
     /// </summary>
     /// <example>public-key</example>
+    [JsonPropertyName("type")]
     public string Type { get; set; }
     
     /// <summary>
@@ -21,5 +24,6 @@ public class PublicKeyCredentialParameters
     /// Must be a <a href="https://www.w3.org/TR/webauthn-2/#typedefdef-cosealgorithmidentifier">COSEAlgorithmIdentifier</a>
     /// </summary>
     /// <example>-7</example>
+    [JsonPropertyName("alg")]
     public int Algorithm { get; set; }
 }

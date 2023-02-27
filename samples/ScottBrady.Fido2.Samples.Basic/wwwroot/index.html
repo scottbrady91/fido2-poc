@@ -12,30 +12,23 @@
 
         let response = await fetch("/fido/register");
         let options = await response.json();
-        options.challenge = new Uint8Array(options.challenge);
-        options.user.id = new Uint8Array(options.user.id);
+        options.challenge = new Uint8Array(options.challenge); // convert Array into Uint8Array
+        options.user.id = new Uint8Array(options.user.id); // convert Array into Uint8Array
         console.log("options:", options);
 
         let credential = await navigator.credentials.create({
             publicKey: {
-                challenge: options.challenge,
                 rp: options.rp,
                 user: options.user,
-                pubKeyCredParams: [
-                    {
-                        type: "public-key",
-                        alg: -7 // "ES256" as registered in the IANA COSE Algorithms registry
-                    },
-                    {
-                        type: "public-key",
-                        alg: -257 // Value registered by this specification for "RS256"
-                    }
-                ],
+                
+                challenge: options.challenge,
+                pubKeyCredParams: options.pubKeyCredParams,
+                
                 authenticatorSelection: {
                     // Try to use UV if possible. This is also the default.
                     userVerification: "preferred"
                 },
-                timeout: 360000,  // 6 minutes            
+                timeout: 360000,  // 6 minutes
             }
         });
 

@@ -30,24 +30,28 @@ public class PublicKeyCredentialCreationOptions
     public byte[] Challenge { get; set; }
     
     /// <inheritdoc cref="PublicKeyCredentialParameters"/>
+    [JsonPropertyName("pubKeyCredParams")]
     public IEnumerable<PublicKeyCredentialParameters> PublicKeyCredentialParameters { get; set; }
     
     /// <summary>
     /// <para>The number of milliseconds the client (WebAuthn API) should wait for the user to complete the registration process.</para>
     /// <para>This is a hint and may be ignored by the client.</para>
     /// </summary>
+    [JsonPropertyName("timeout")]
     public int? Timeout { get; set; }
     
     /// <summary>
     /// Credentials to ignore during registration.
     /// This can prevent multiple credentials being created for the same account on a single authenticator.
     /// </summary>
+    [JsonPropertyName("excludeCredentials")]
     public IEnumerable<PublicKeyCredentialDescriptor> ExcludeCredentials { get; set; }
     
     /// <summary>
     /// Criteria that an authenticator must meet in order to complete registration.
     /// </summary>
-    public AuthenticatorSelectionCriteria AuthenticatorSelectionCriteria { get; set; }
+    [JsonPropertyName("authenticatorSelection")]
+    public AuthenticatorSelectionCriteria AuthenticatorSelection { get; set; }
 
     /// <summary>
     /// <para>The relying party's preference for attestation conveyance.
@@ -55,12 +59,14 @@ public class PublicKeyCredentialCreationOptions
     /// <para>Unknown values will be ignored by the client (WebAuthn API).</para>
     /// <para>Defaults to "none".</para>
     /// </summary>
-    public string AttestationConveyancePreference { get; set; } = FidoConstants.AttestationConveyancePreference.None;
+    [JsonPropertyName("attestation")]
+    public string Attestation { get; set; } = FidoConstants.AttestationConveyancePreference.None;
 
     /// <summary>
     /// Additional parameters for the client (WebAuthn API) and authenticator.
     /// See <a href="https://www.w3.org/TR/webauthn-2/#sctn-extension-request-parameters">W3C spec</a> for more details.
     /// </summary>
+    [JsonPropertyName("extensions")]
     public Dictionary<string, object> Extensions { get; set; } = null;
     
     /// <summary>
@@ -68,5 +74,5 @@ public class PublicKeyCredentialCreationOptions
     /// Allows the user to identify what authenticators they have registered at the relying party (web server).
     /// Can be set by the user during or after registration.
     /// </summary>
-    public string DeviceDisplayName { get; set; }
+    public string DeviceDisplayName { get; set; } // TODO: move to options wrapper
 }
