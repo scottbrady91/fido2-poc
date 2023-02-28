@@ -1,4 +1,5 @@
 ﻿<h1>Click to register new (ES256 or RS256)</h1>
+<!--<label for="username">Username: </label><input id="username" type="text" />-->
 <button onclick="register()">register</button>
 <button onclick="authenticate()">authenticate</button>
 <code id="result"></code>
@@ -23,12 +24,16 @@
                 
                 challenge: options.challenge,
                 pubKeyCredParams: options.pubKeyCredParams,
-                
+
+                timeout: 360000,  // 6 minutes
+                // TODO: excludeCredentials
                 authenticatorSelection: {
                     // Try to use UV if possible. This is also the default.
                     userVerification: "preferred"
                 },
-                timeout: 360000,  // 6 minutes
+                attestation: options.attestation, // "none"
+                // TODO: extensions
+                
             }
         });
 
@@ -48,15 +53,17 @@
                 id: credential.id,
                 rawId: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))),
                 type: credential.type,
-                // extensions: credential.getClientExtensionResults(),
-                // transports: credential.response.getTransports(), 
-                // authenticatorData: credential.response.getAuthenticatorData(),
-                // publicKey: credential.response.getPublicKey(),
-                // publicKeyAlgorithm: credential.response.getPublicKeyAlgorithm(),
                 response: {
                     attestationObject: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))),
                     clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)))
                 }
+                // TODO: optional transports
+                // transports: credential.response.getTransports(), 
+                // TODO: other functions to test
+                // extensions: credential.getClientExtensionResults(),
+                // authenticatorData: credential.response.getAuthenticatorData(),
+                // publicKey: credential.response.getPublicKey(),
+                // publicKeyAlgorithm: credential.response.getPublicKeyAlgorithm(),
             })
         });
         
