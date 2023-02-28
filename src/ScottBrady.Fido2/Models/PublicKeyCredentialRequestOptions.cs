@@ -1,23 +1,30 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace ScottBrady.Fido2.Models;
 // TODO: review required fields and approach to validation
 
-/// <summary>
-/// 
-/// </summary>
 public class PublicKeyCredentialRequestOptions
 {
+    [JsonConstructor]
+    public PublicKeyCredentialRequestOptions(byte[] challenge)
+    {
+        Challenge = challenge ?? throw new ArgumentNullException(nameof(challenge));
+    }
+    
     /// <summary>
     /// <para>The cryptographically random challenge used to match an authenticator response to a WebAuthn request.</para>
     /// <para>Must be at least 16-bytes long.</para>
     /// </summary>
-    public byte[] Challenge { get; set; }
+    [JsonPropertyName("challenge")]
+    public byte[] Challenge { get; }
     
     /// <summary>
     /// <para>The number of milliseconds the client (WebAuthn API) should wait for the user to complete the registration process.</para>
     /// <para>This is a hint and may be ignored by the client.</para>
     /// </summary>
+    [JsonPropertyName("timeout")]
     public int? Timeout { get; set; }
 
     /// <summary>
@@ -28,12 +35,14 @@ public class PublicKeyCredentialRequestOptions
     /// If not provided, defaults to the origin's effective domain.
     /// </summary>
     /// <example>login.example.com</example>
+    [JsonPropertyName("rpId")]
     public string RpId { get; set; }
     
     /// <summary>
     /// An ordered collection of credentials that the identified user can use to authenticate with.
     /// The first credential is the most preferred.
     /// </summary>
+    [JsonPropertyName("allowCredentials")]
     public IEnumerable<PublicKeyCredentialDescriptor> AllowCredentials { get; set; }
 
     /// <summary>
@@ -44,11 +53,13 @@ public class PublicKeyCredentialRequestOptions
     /// <para>Defaults to "preferred"</para>
     /// </summary>
     /// <example>preferred</example>
+    [JsonPropertyName("userVerification")]
     public string UserVerification { get; set; } = FidoConstants.UserVerificationRequirement.Preferred;
     
     /// <summary>
     /// Additional parameters for the client (WebAuthn API) and authenticator.
     /// See <a href="https://www.w3.org/TR/webauthn-2/#sctn-extension-request-parameters">W3C spec</a> for more details.
     /// </summary>
+    [JsonPropertyName("extensions")]
     public Dictionary<string, object> Extensions { get; set; }
 }

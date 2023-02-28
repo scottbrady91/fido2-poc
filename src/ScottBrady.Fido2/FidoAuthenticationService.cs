@@ -38,12 +38,11 @@ public class FidoAuthenticationService
 
         var key = await keyStore.GetByUsername(request.Username);
 
-        var options = new PublicKeyCredentialRequestOptions
+        var options = new PublicKeyCredentialRequestOptions(RandomNumberGenerator.GetBytes(32))
         {
-            Challenge = RandomNumberGenerator.GetBytes(32),
             RpId = RpId,
-            AllowCredentials = new[] { new PublicKeyCredentialDescriptor { Id = key.CredentialId, Type = "public-key" } },
-            // TODO: make AllowCredentials optional??? Required when you know the user? Try again later...
+            AllowCredentials = new[] { new PublicKeyCredentialDescriptor(key.CredentialId) },
+            // TODO: make AllowCredentials optional???
             UserVerification = request.UserVerification ?? FidoConstants.UserVerificationRequirement.Preferred
         };
         

@@ -77,21 +77,20 @@
 
         let response = await fetch("/fido/authenticate");
         let options = await response.json();
-        options.challenge = new Uint8Array(options.Challenge);
+        options.challenge = new Uint8Array(options.challenge);
         console.log("options:", options);
 
         // TODO: casing
-        for (const allowCredential of options.AllowCredentials) {
-            allowCredential.id = new Uint8Array(allowCredential.Id)
-            allowCredential.type = allowCredential.Type
+        for (const allowCredential of options.allowCredentials) {
+            allowCredential.id = new Uint8Array(allowCredential.id)
         }
 
-        console.log(options.AllowCredentials);
+        console.log(options.allowCredentials);
 
         let credential = await navigator.credentials.get({
             publicKey: {
                 challenge: options.challenge,
-                allowCredentials: options.AllowCredentials
+                allowCredentials: options.allowCredentials
             }
         });
 

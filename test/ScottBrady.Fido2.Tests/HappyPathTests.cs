@@ -99,7 +99,7 @@ public class HappyPathTests
     public async Task FidoAuthenticationService_CompleteRegistration()
     {
         var optionsStore = new InMemoryFidoOptionsStore();
-        await optionsStore.Store(new PublicKeyCredentialRequestOptions { Challenge = AuthenticationData.TestChallenge });
+        await optionsStore.Store(new PublicKeyCredentialRequestOptions(AuthenticationData.TestChallenge));
 
         var keyStore = new InMemoryFidoKeyStore();
         await keyStore.Store(new FidoKey

@@ -40,4 +40,6 @@ app.MapPost("/fido/authenticate", async (PublicKeyCredential credential, FidoAut
     return Results.Json(result);
 });
 
+app.MapGet("/fido/keys", () => Results.Json(InMemoryFidoKeyStore.Keys));
+
 app.Run();

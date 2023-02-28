@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace ScottBrady.Fido2.Models;
 
@@ -11,23 +13,33 @@ namespace ScottBrady.Fido2.Models;
 /// </remarks>
 public class PublicKeyCredentialDescriptor
 {
+    [JsonConstructor]
+    public PublicKeyCredentialDescriptor(byte[] id, string type = "public-key")
+    {
+        Id = id ?? throw new ArgumentNullException(nameof(id));
+        Type = type ?? throw new ArgumentNullException(nameof(type));
+    }
+    
     /// <summary>
     /// <para>The type of credential being described.
     /// Should be <a href="https://www.w3.org/TR/webauthn-2/#enumdef-publickeycredentialtype">"public-key"</a>, but open to future extensibility.</para>
     /// <para>Unknown values will be ignored by the client (WebAuthn API).</para>
     /// </summary>
     /// <example>public-key</example>
-    public string Type { get; set; }
+    [JsonPropertyName("type")]
+    public string Type { get; }
     
     /// <summary>
     /// The ID of the credential to ignore.
     /// </summary>
-    public byte[] Id { get; set; }
+    [JsonPropertyName("id")]
+    public byte[] Id { get; }
     
     /// <summary>
     /// <para>Hints how the client (WebAuthn API) should communicate with the credential.
     /// Should be a value from <a href="https://www.w3.org/TR/webauthn-2/#enumdef-authenticatortransport">AuthenticatorTransport</a>.</para>
     /// <para>Unknown values will be ignored by the client (WebAuthn API).</para>
     /// </summary>
+    [JsonPropertyName("transports")]
     public IEnumerable<string> Transports { get; set; }
 }

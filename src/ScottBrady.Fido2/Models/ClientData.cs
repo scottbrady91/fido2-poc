@@ -1,6 +1,4 @@
-﻿using ScottBrady.Fido2.Parsers;
-
-namespace ScottBrady.Fido2.Models;
+﻿namespace ScottBrady.Fido2.Models;
 
 /// <summary>
 /// Parsed clientDataJSON from registration or authentication.
