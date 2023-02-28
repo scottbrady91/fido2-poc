@@ -45,10 +45,10 @@ public class CredentialPublicKey
         var jsonNode = JsonNode.Parse(KeyAsJson);
         if (jsonNode == null) throw new Exception("unable to load json");
 
-        var x = jsonNode[CoseConstants.Parameters.X]?.GetValue<string>();
-        var y = jsonNode[CoseConstants.Parameters.Y]?.GetValue<string>();
+        var x = jsonNode[CoseConstants.Parameters.X]?.ToString();
+        var y = jsonNode[CoseConstants.Parameters.Y]?.ToString();
         
-        var crv = jsonNode[CoseConstants.Parameters.Crv]?.GetValue<string>();
+        var crv = jsonNode[CoseConstants.Parameters.Crv]?.ToString();
 
         return new ECParameters
         {
@@ -63,7 +63,7 @@ public class CredentialPublicKey
 
     private static ECCurve ParseCurve(string coseCurve) => coseCurve switch
     {
-        CoseConstants.Algorithms.ES256 => ECCurve.NamedCurves.nistP256,
+        CoseConstants.EllipticCurves.P256 => ECCurve.NamedCurves.nistP256,
         _ => throw new FidoException("Unsupported EC curve")
     };
 
@@ -74,8 +74,8 @@ public class CredentialPublicKey
         var jsonNode = JsonNode.Parse(KeyAsJson);
         if (jsonNode == null) throw new Exception("unable to load json");
         
-        var modulus = jsonNode[CoseConstants.Parameters.N]?.GetValue<string>();
-        var exponent = jsonNode[CoseConstants.Parameters.E]?.GetValue<string>();
+        var modulus = jsonNode[CoseConstants.Parameters.N]?.ToString();
+        var exponent = jsonNode[CoseConstants.Parameters.E]?.ToString();
 
         return new RSAParameters
         {
@@ -118,5 +118,18 @@ public static class CoseConstants
     public static class Algorithms
     {
         public const string ES256 = "-7";
+    }
+
+    // https://www.iana.org/assignments/cose/cose.xhtml#elliptic-curves
+    public static class EllipticCurves
+    {
+        public const string P256 = "1";
+        public const string P384 = "2";
+        public const string P521 = "3";
+        public const string X25519 = "4";
+        public const string X448 = "5";
+        public const string Ed25519 = "6";
+        public const string Ed448 = "7";
+        public const string Secp256k1 = "8";
     }
 }
