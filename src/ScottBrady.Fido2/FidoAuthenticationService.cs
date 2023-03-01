@@ -11,8 +11,6 @@ using ScottBrady.Fido2.Stores;
 
 namespace ScottBrady.Fido2;
 
-// TODO: lookup by username?
-
 public class FidoAuthenticationService
 {
     private const string RpId = "localhost";
@@ -62,10 +60,10 @@ public class FidoAuthenticationService
         var options = await optionsStore.TakeAuthenticationOptions(challenge);
         if (options == null) throw new Exception("Incorrect options");
         
-        // TODO: verify all allowed credentials
         if (options.AllowCredentials?.Any() == true)
         {
-            //
+            if (options.AllowCredentials.All(x => x.Id != credential.RawId))
+                return FidoAuthenticationResult.Failure("Incorrect credential used - ID not present in requested credential list (allowCredentials)");
         }
         
         var key = await keyStore.GetByCredentialId(Base64UrlEncoder.DecodeBytes(credential.Id));
@@ -73,7 +71,6 @@ public class FidoAuthenticationService
 
         // TODO: also validate against user identified
         if (response.UserHandle != null && !response.UserHandle.SequenceEqual(key.UserId)) throw new Exception("Incorrect key for user");
-        
         
         // TODO: verify user handle
         // known during auth: confirm owner of key
@@ -99,8 +96,9 @@ public class FidoAuthenticationService
         hash.CopyTo(dataToValidate, response.AuthenticatorData.Length);
         
         var signatureValidator = new FidoSignatureValidator();
-        await signatureValidator.ValidateSignature(dataToValidate, response.Signature, key.CredentialPublicKey);
-        
+        var isValidSignature = await signatureValidator.IsValidSignature(dataToValidate, response.Signature, key.CredentialPublicKey);
+        if (!isValidSignature) return FidoAuthenticationResult.Failure("Invalid signature");
+
         await keyStore.UpdateCounter(key.CredentialId, authenticatorData.SignCount);
 
         return FidoAuthenticationResult.Success(key, authenticatorData);

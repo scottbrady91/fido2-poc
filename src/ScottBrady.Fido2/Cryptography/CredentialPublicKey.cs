@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 using Microsoft.IdentityModel.Tokens;
@@ -11,17 +10,22 @@ namespace ScottBrady.Fido2.Cryptography;
 /// </summary>
 public class CredentialPublicKey
 {
+    /// <summary>
+    /// Creates a CredentialPublicKey from a JSON string using COSE keys and values.
+    /// </summary>
+    /// <param name="coseKeyAsJson">A JSON string using COSE keys and Values. See <see cref="CoseConstants"/></param>
+    /// <exception cref="FidoException">Unable to parse public key or find required values</exception>
     public CredentialPublicKey(string coseKeyAsJson)
     {
         var jsonNode = JsonNode.Parse(coseKeyAsJson);
-        if (jsonNode == null) throw new FidoException("Unable to load public key");
+        if (jsonNode == null) throw new FidoException("Unable to load public key json");
         
         KeyAsJson = coseKeyAsJson;
-        KeyType = jsonNode[CoseConstants.Parameters.Kty]?.ToString();
-        Algorithm = jsonNode[CoseConstants.Parameters.Alg]?.ToString();
+        KeyType = jsonNode[CoseConstants.Parameters.Kty]?.ToString() ?? throw new FidoException("Unable to find kty (1) value");
+        Algorithm = jsonNode[CoseConstants.Parameters.Alg]?.ToString() ?? throw new FidoException("Unable to find alg (2) value");
     }
     
-    // TODO: consider using ints, not strings (value is always a string, even if not in CBOR?
+    // TODO: consider using ints, not strings (value is always a string, even if not in CBOR?)
     
     /// <summary>
     /// The COSE key type.
@@ -38,18 +42,23 @@ public class CredentialPublicKey
     /// </summary>
     public string KeyAsJson { get; }
 
+    /// <summary>
+    /// Creates a <see cref="ECParameters"/> from the JSON key using COSE keys and values.
+    /// </summary>
+    /// <returns><see cref="ECParameters"/> that can be used to create an instance of <see cref="ECDsa"/></returns>
+    /// <exception cref="FidoException">Unable to parse public key or find required values</exception>
     public ECParameters LoadEcParameters()
     {
         // TODO: guards
         
         var jsonNode = JsonNode.Parse(KeyAsJson);
-        if (jsonNode == null) throw new Exception("unable to load json");
+        if (jsonNode == null) throw new FidoException("Unable to load public key json");
 
-        var x = jsonNode[CoseConstants.Parameters.X]?.ToString();
-        var y = jsonNode[CoseConstants.Parameters.Y]?.ToString();
+        var crv = jsonNode[CoseConstants.Parameters.Crv]?.ToString() ?? throw new FidoException("Unable to find crv (-1) value for EC key");
+        var x = jsonNode[CoseConstants.Parameters.X]?.ToString() ?? throw new FidoException("Unable to find x (-2) coordinate for EC key");
+        var y = jsonNode[CoseConstants.Parameters.Y]?.ToString() ?? throw new FidoException("Unable to find y (-3) coordinate for EC key");
         
-        var crv = jsonNode[CoseConstants.Parameters.Crv]?.ToString();
-
+        // TODO: call validate ECParameters?
         return new ECParameters
         {
             Curve = ParseCurve(crv),
@@ -64,7 +73,9 @@ public class CredentialPublicKey
     private static ECCurve ParseCurve(string coseCurve) => coseCurve switch
     {
         CoseConstants.EllipticCurves.P256 => ECCurve.NamedCurves.nistP256,
-        _ => throw new FidoException("Unsupported EC curve")
+        CoseConstants.EllipticCurves.P384 => ECCurve.NamedCurves.nistP384,
+        CoseConstants.EllipticCurves.P521 => ECCurve.NamedCurves.nistP521,
+        _ => throw new FidoException($"Unsupported EC curve with COSE value '{coseCurve}'")
     };
 
     public RSAParameters LoadRsaParameters()
@@ -118,6 +129,14 @@ public static class CoseConstants
     public static class Algorithms
     {
         public const string ES256 = "-7";
+        public const string EdDSA = "-8";
+        public const string ES384 = "-35";
+        public const string ES512 = "-36";
+        public const string ES256K = "-47";
+        public const string RS256 = "-257";
+        public const string RS384 = "-258";
+        public const string RS512 = "-259";
+        public const string RS1 = "-65535";
     }
 
     // https://www.iana.org/assignments/cose/cose.xhtml#elliptic-curves
