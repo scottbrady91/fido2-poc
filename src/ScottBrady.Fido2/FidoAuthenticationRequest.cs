@@ -35,5 +35,5 @@ public class FidoAuthenticationRequest
     /// <para>Defaults to "preferred"</para>
     /// </summary>
     /// <example>preferred</example>
-    public string UserVerification { get; set; } = FidoConstants.UserVerificationRequirement.Preferred;
+    public string UserVerification { get; set; } = WebAuthnConstants.UserVerificationRequirement.Preferred;
 }

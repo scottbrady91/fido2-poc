@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Formats.Asn1;
 using System.Security.Cryptography;
-using System.Text.Json.Nodes;
-using Microsoft.IdentityModel.Tokens;
 
 namespace ScottBrady.Fido2.Cryptography;
 
@@ -34,6 +32,4 @@ public class EcdsaSignatureValidationStrategy : ISignatureValidationStrategy
 
         return parsedSignature;
     }
-    
-    // TODO: `validate key` helper method?
 }

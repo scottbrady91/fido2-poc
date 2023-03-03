@@ -1,6 +1,9 @@
 ﻿namespace ScottBrady.Fido2;
 
-public static class FidoConstants
+/// <summary>
+/// Values from the WebAuthn Level-2 specification
+/// </summary>
+public static class WebAuthnConstants
 {
     /// <summary>
     /// Known transports the client (WebAuthn API) can use to communicate with an authenticator.

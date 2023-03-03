@@ -41,7 +41,7 @@ public class FidoAuthenticationService
             RpId = RpId,
             AllowCredentials = new[] { new PublicKeyCredentialDescriptor(key.CredentialId) },
             // TODO: make AllowCredentials optional???
-            UserVerification = request.UserVerification ?? FidoConstants.UserVerificationRequirement.Preferred
+            UserVerification = request.UserVerification ?? WebAuthnConstants.UserVerificationRequirement.Preferred
         };
         
         await optionsStore.Store(options);
@@ -79,14 +79,14 @@ public class FidoAuthenticationService
         if (clientData.Type != "webauthn.get") throw new Exception("Incorrect type");
         if (!challenge.SequenceEqual(options.Challenge)) throw new Exception("Incorrect challenge");
         if (clientData.Origin != "https://localhost:5000") throw new Exception("Incorrect origin");
-        if (clientData.TokenBinding != null && clientData.TokenBinding.Status == FidoConstants.TokenBindingStatus.Present) throw new Exception("Incorrect token binding");
+        if (clientData.TokenBinding != null && clientData.TokenBinding.Status == WebAuthnConstants.TokenBindingStatus.Present) throw new Exception("Incorrect token binding");
 
         var authenticatorData = authenticatorDataParser.Parse(response.AuthenticatorData);
         if (!SHA256.HashData(Encoding.UTF8.GetBytes(RpId)).SequenceEqual(authenticatorData.RpIdHash)) throw new Exception("Incorrect RP ID");
         
         if (authenticatorData.UserPresent == false) throw new Exception("Incorrect user present");
         
-        if (options.UserVerification == FidoConstants.UserVerificationRequirement.Required && !authenticatorData.UserVerified) throw new Exception("Incorrect UV");
+        if (options.UserVerification == WebAuthnConstants.UserVerificationRequirement.Required && !authenticatorData.UserVerified) throw new Exception("Incorrect UV");
         
         // TODO: hook to validate extensions?
 

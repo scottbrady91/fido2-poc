@@ -60,7 +60,7 @@ public class PublicKeyCredentialCreationOptions
     /// <para>Defaults to "none".</para>
     /// </summary>
     [JsonPropertyName("attestation")]
-    public string Attestation { get; set; } = FidoConstants.AttestationConveyancePreference.None;
+    public string Attestation { get; set; } = WebAuthnConstants.AttestationConveyancePreference.None;
 
     /// <summary>
     /// Additional parameters for the client (WebAuthn API) and authenticator.

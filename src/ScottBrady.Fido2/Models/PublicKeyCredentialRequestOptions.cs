@@ -54,7 +54,7 @@ public class PublicKeyCredentialRequestOptions
     /// </summary>
     /// <example>preferred</example>
     [JsonPropertyName("userVerification")]
-    public string UserVerification { get; set; } = FidoConstants.UserVerificationRequirement.Preferred;
+    public string UserVerification { get; set; } = WebAuthnConstants.UserVerificationRequirement.Preferred;
     
     /// <summary>
     /// Additional parameters for the client (WebAuthn API) and authenticator.

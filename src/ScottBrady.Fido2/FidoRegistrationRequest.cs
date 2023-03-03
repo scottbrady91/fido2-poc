@@ -48,5 +48,5 @@ public class FidoRegistrationRequest
     public AuthenticatorSelectionCriteria AuthenticatorSelectionCriteria { get; set; }
     
     /// <inheritdoc cref="PublicKeyCredentialCreationOptions.Attestation"/>
-    public string AttestationConveyancePreference { get; set; } = FidoConstants.AttestationConveyancePreference.None;
+    public string AttestationConveyancePreference { get; set; } = WebAuthnConstants.AttestationConveyancePreference.None;
 }

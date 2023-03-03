@@ -78,7 +78,7 @@ public class FidoRegistrationService
         if (clientData.Type != "webauthn.create") throw new Exception("Incorrect type");
         if (!challenge.SequenceEqual(options.Challenge)) throw new Exception("Incorrect challenge");
         if (clientData.Origin != "https://localhost:5000") throw new Exception("Incorrect origin");
-        if (clientData.TokenBinding != null && clientData.TokenBinding.Status == FidoConstants.TokenBindingStatus.Present) throw new Exception("Incorrect token binding"); 
+        if (clientData.TokenBinding != null && clientData.TokenBinding.Status == WebAuthnConstants.TokenBindingStatus.Present) throw new Exception("Incorrect token binding"); 
         
         var attestationObject = attestationObjectParser.Parse(response.AttestationObject);
         if (attestationObject.StatementFormat != "none") throw new Exception("Incorrect statement format");
