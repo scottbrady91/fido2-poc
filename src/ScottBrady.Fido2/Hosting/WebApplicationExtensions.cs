@@ -16,10 +16,19 @@ public static class WebApplicationExtensions
     /// </summary>
     public static WebApplication UseWebAuthnApi(this WebApplication app)
     {
-        app.MapPut("/fido/register", async (FidoRegistrationRequest request, FidoRegistrationService registrationService) =>
+        var jsonSerializerOptions = new JsonSerializerOptions
         {
+            Converters = { new IntArrayJsonConverter(), new EmptyToNullStringConverter() },
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            PropertyNameCaseInsensitive = true
+        };
+        
+        app.MapPut("/fido/register", async (HttpContext context, FidoRegistrationService registrationService) =>
+        {
+            var request = await JsonSerializer.DeserializeAsync<FidoRegistrationRequest>(context.Request.Body, jsonSerializerOptions);
+            
             var options = await registrationService.Initiate(request);
-            return Results.Json(options, new JsonSerializerOptions{Converters = { new IntArrayJsonConverter() }, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, PropertyNameCaseInsensitive = true}, statusCode: 200);
+            return Results.Json(options, jsonSerializerOptions, statusCode: 200);
         });
 
         app.MapPost("/fido/register", async (PublicKeyCredential response, FidoRegistrationService registrationService) =>
@@ -31,7 +40,7 @@ public static class WebApplicationExtensions
         app.MapPut("/fido/authenticate", async (FidoAuthenticationRequest request, IFidoAuthenticationService authenticationService) =>
         {
             var options = await authenticationService.Initiate(request);
-            return Results.Json(options, new JsonSerializerOptions{Converters = { new IntArrayJsonConverter() }, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, PropertyNameCaseInsensitive = true}, statusCode: 200);
+            return Results.Json(options, jsonSerializerOptions, statusCode: 200);
         });
 
         app.MapPost("/fido/authenticate", async (PublicKeyCredential credential, IFidoAuthenticationService authenticationService) =>

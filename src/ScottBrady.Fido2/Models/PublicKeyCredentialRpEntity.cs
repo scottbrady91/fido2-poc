@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 
 namespace ScottBrady.Fido2.Models;
 
@@ -10,6 +11,16 @@ namespace ScottBrady.Fido2.Models;
 /// </remarks>
 public class PublicKeyCredentialRpEntity
 {
+    /// <summary>
+    /// Creates a new PublicKeyCredentialRpEntity using required fields.
+    /// </summary>
+    [JsonConstructor]
+    public PublicKeyCredentialRpEntity(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
+        Name = name;
+    }
+    
     /// <summary>
     /// <para>The ID that uniquely identifies the relying party (web application).
     /// This is the <a href="https://www.w3.org/TR/webauthn-2/#rp-id">RP ID</a> used by the WebAuthn API.</para>
@@ -28,5 +39,5 @@ public class PublicKeyCredentialRpEntity
     /// </summary>
     /// <example>ACME Corp</example>
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string Name { get; }
 }

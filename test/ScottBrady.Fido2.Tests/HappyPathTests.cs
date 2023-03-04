@@ -77,7 +77,7 @@ public class HappyPathTests
         await optionsStore.Store(new PublicKeyCredentialCreationOptions
         {
             Challenge = RegistrationData.TestChallenge,
-            User = new PublicKeyCredentialUserEntity { Id = RandomNumberGenerator.GetBytes(32),Name = "Scott", DisplayName = "Scott"},
+            User = new PublicKeyCredentialUserEntity(RandomNumberGenerator.GetBytes(32), "Scott", "Scott"),
             PublicKeyCredentialParameters = new []{new PublicKeyCredentialParameters{Type = "public-key", Algorithm = int.Parse(CoseConstants.Algorithms.ES256)}}
         });
         

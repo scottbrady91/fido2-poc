@@ -29,37 +29,21 @@ public class FidoRegistrationService
     
     public async Task<PublicKeyCredentialCreationOptions> Initiate(FidoRegistrationRequest request)
     {
-        // TODO: global: relying party
-        // TODO: overrides: timeout, algs (PublicKeyCredentialParameters), excludeCredentials?, authenticatorSelection???, attestation preference, extensions (pass though?)
+        // TODO: overrides: timeout, algs (PublicKeyCredentialParameters), excludeCredentials?, extensions (pass though?)
 
-        var options = new PublicKeyCredentialCreationOptions
+        var options = new PublicKeyCredentialCreationOptions(
+            new PublicKeyCredentialRpEntity(configurationOptions.RelyingPartyName) { Id = configurationOptions.RelyingPartyId },
+            request)
         {
-            Rp = new PublicKeyCredentialRpEntity
+            PublicKeyCredentialParameters = new[]
             {
-                Id = configurationOptions.RelyingPartyId,
-                Name = configurationOptions.RelyingPartyName,
+                new PublicKeyCredentialParameters { Type = "public-key", Algorithm = -7 },
+                new PublicKeyCredentialParameters { Type = "public-key", Algorithm = -257 }
             },
-            User = new PublicKeyCredentialUserEntity
-            {
-                Id = RandomNumberGenerator.GetBytes(32),
-                Name = request.Username,
-                DisplayName = request.UserDisplayName
-            },
-            Challenge = RandomNumberGenerator.GetBytes(32),
-            PublicKeyCredentialParameters = new []{new PublicKeyCredentialParameters{Type = "public-key", Algorithm = -7}, new PublicKeyCredentialParameters{Type = "public-key", Algorithm = -257}},
-            DeviceDisplayName = request.DeviceDisplayName,
-            
+            // Timeout =
+            // Extensions = 
         };
 
-        if (configurationOptions.RelyingPartyId is not null || configurationOptions.RelyingPartyName is not null)
-        {
-            options.Rp = new PublicKeyCredentialRpEntity
-            {
-                Id = configurationOptions.RelyingPartyId,
-                Name = configurationOptions.RelyingPartyName
-            };
-        }
-        
         await optionsStore.Store(options);
 
         return options;

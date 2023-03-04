@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 using ScottBrady.Fido2.Models;
 
 namespace ScottBrady.Fido2;
@@ -24,20 +25,22 @@ public class FidoRegistrationRequest
     /// The user's display name.
     /// Used to differentiate between user accounts with similar display names.
     /// This value can be displayed to the user and will be stored by the authenticator.
+    /// If not provided, this value will be set to the username.
     /// </param>
-    public FidoRegistrationRequest(string username, string userDisplayName)
+    public FidoRegistrationRequest(string username, string userDisplayName = null)
     {
         if (string.IsNullOrWhiteSpace(username)) throw new ArgumentNullException(nameof(username));
-        if (string.IsNullOrWhiteSpace(userDisplayName)) throw new ArgumentNullException(nameof(username));
 
         Username = username;
-        UserDisplayName = userDisplayName;
+        UserDisplayName = !string.IsNullOrWhiteSpace(userDisplayName) ? userDisplayName : username;
     }
 
     /// <inheritdoc cref="PublicKeyCredentialUserEntity.Name"/>
+    [JsonPropertyName("username")]
     public string Username { get; }
     
     /// <inheritdoc cref="PublicKeyCredentialUserEntity.DisplayName"/>
+    [JsonPropertyName("displayName")]
     public string UserDisplayName { get; }
     
     /// <summary>
@@ -45,11 +48,14 @@ public class FidoRegistrationRequest
     /// Allows the user to identify what authenticators they have registered at the relying party (web server).
     /// Can be set by the user during or after registration.
     /// </summary>
+    [JsonPropertyName("deviceDisplayName")]
     public string DeviceDisplayName { get; set; }
     
     /// <inheritdoc cref="Models.AuthenticatorSelectionCriteria"/>
+    [JsonPropertyName("authenticatorSelection")]
     public AuthenticatorSelectionCriteria AuthenticatorSelectionCriteria { get; set; }
     
     /// <inheritdoc cref="PublicKeyCredentialCreationOptions.Attestation"/>
+    [JsonPropertyName("attestation")]
     public string AttestationConveyancePreference { get; set; } = WebAuthnConstants.AttestationConveyancePreference.None;
 }

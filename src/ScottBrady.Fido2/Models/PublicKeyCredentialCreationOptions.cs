@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 
 namespace ScottBrady.Fido2.Models;
@@ -12,26 +14,57 @@ namespace ScottBrady.Fido2.Models;
 /// </remarks>
 public class PublicKeyCredentialCreationOptions
 {
-    // TODO: constructor to enforce required fields
+    /// <summary>
+    /// Create a new PublicKeyCredentialCreationOptions.
+    /// </summary>
+    public PublicKeyCredentialCreationOptions() { }
+
+    /// <summary>
+    /// Creates a new PublicKeyCredentialCreationOptions from a registration request.
+    /// </summary>
+    public PublicKeyCredentialCreationOptions(PublicKeyCredentialRpEntity relyingParty, FidoRegistrationRequest request)
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+        RelyingParty = relyingParty;
+        User = new PublicKeyCredentialUserEntity(RandomNumberGenerator.GetBytes(32), request.Username, request.UserDisplayName); // TODO: Same user ID for multiple devices? How does that work again? What about enumeration?
+        Challenge = RandomNumberGenerator.GetBytes(32); // TODO: does challenge generation need to be configurable? If so, set in ctor here.
+        // PublicKeyCredentialParameters = // TODO: set RP and PublicKeyCredentialParameters in ctor via options?
+        // ExcludeCredentials // TODO: set via user/key object? Should only set when user already identified and identity partially verified to prevent enumeration.
+        AuthenticatorSelectionCriteria = request.AuthenticatorSelectionCriteria;
+        Attestation = request.AttestationConveyancePreference;
+        DeviceDisplayName = request.DeviceDisplayName;
+    }
+    
+    /// <summary>
+    /// Creates a new PublicKeyCredentialCreationOptions from required fields.
+    /// </summary>
+    [JsonConstructor]
+    public PublicKeyCredentialCreationOptions(PublicKeyCredentialRpEntity relyingParty, PublicKeyCredentialUserEntity user, byte[] challenge, IEnumerable<PublicKeyCredentialParameters> publicKeyCredentialParameters)
+    {
+        RelyingParty = relyingParty ?? throw new ArgumentNullException(nameof(relyingParty));
+        User = user ?? throw new ArgumentNullException(nameof(user));
+        Challenge = challenge ?? throw new ArgumentNullException(nameof(challenge));
+        PublicKeyCredentialParameters = publicKeyCredentialParameters ?? throw new ArgumentNullException(nameof(publicKeyCredentialParameters));
+    }
     
     /// <inheritdoc cref="PublicKeyCredentialRpEntity" />
     [JsonPropertyName("rp")]
-    public PublicKeyCredentialRpEntity Rp { get; set; }
+    public PublicKeyCredentialRpEntity RelyingParty { get; init; } // TODO: remove setter
     
     /// <inheritdoc cref="PublicKeyCredentialUserEntity"/>
     [JsonPropertyName("user")]
-    public PublicKeyCredentialUserEntity User { get; set; }
+    public PublicKeyCredentialUserEntity User { get; init; } // TODO: remove setter
 
     /// <summary>
     /// <para>The cryptographically random challenge used to match an authenticator response to a WebAuthn request.</para>
     /// <para>Must be at least 16-bytes long.</para>
     /// </summary>
     [JsonPropertyName("challenge")]
-    public byte[] Challenge { get; set; }
+    public byte[] Challenge { get; init; } // TODO: remove setter
     
     /// <inheritdoc cref="PublicKeyCredentialParameters"/>
     [JsonPropertyName("pubKeyCredParams")]
-    public IEnumerable<PublicKeyCredentialParameters> PublicKeyCredentialParameters { get; set; }
+    public IEnumerable<PublicKeyCredentialParameters> PublicKeyCredentialParameters { get; init; } // TODO: remove setter
     
     /// <summary>
     /// <para>The number of milliseconds the client (WebAuthn API) should wait for the user to complete the registration process.</para>
@@ -51,7 +84,7 @@ public class PublicKeyCredentialCreationOptions
     /// Criteria that an authenticator must meet in order to complete registration.
     /// </summary>
     [JsonPropertyName("authenticatorSelection")]
-    public AuthenticatorSelectionCriteria AuthenticatorSelection { get; set; }
+    public AuthenticatorSelectionCriteria AuthenticatorSelectionCriteria { get; set; }
 
     /// <summary>
     /// <para>The relying party's preference for attestation conveyance.
@@ -74,5 +107,5 @@ public class PublicKeyCredentialCreationOptions
     /// Allows the user to identify what authenticators they have registered at the relying party (web server).
     /// Can be set by the user during or after registration.
     /// </summary>
-    public string DeviceDisplayName { get; set; } // TODO: move to options wrapper
+    public string DeviceDisplayName { get; set; } // TODO: move to options wrapper?
 }

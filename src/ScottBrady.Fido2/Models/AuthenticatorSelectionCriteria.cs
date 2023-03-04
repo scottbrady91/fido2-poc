@@ -1,4 +1,6 @@
-﻿namespace ScottBrady.Fido2.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace ScottBrady.Fido2.Models;
 
 /// <summary>
 /// Criteria that an authenticator must meet in order to complete registration.
@@ -14,7 +16,8 @@ public class AuthenticatorSelectionCriteria
     /// <para>Unknown values will be ignored by the client.</para>
     /// </summary>
     /// <example>cross-platform</example>
-    public string AuthenticatorAttachment { get; set; } = null;
+    [JsonPropertyName("authenticatorAttachment")]
+    public string AuthenticatorAttachment { get; set; }
     
     /// <summary>
     /// <para>The extent to which the relying party (web server) requires a client-side discoverable credential (think usernameless authentication).
@@ -23,12 +26,14 @@ public class AuthenticatorSelectionCriteria
     /// <para>Unknown values will be ignored by the client.</para> 
     /// </summary>
     /// <example>discouraged</example>
+    [JsonPropertyName("residentKey")]
     public string ResidentKey { get; set; }
     
     /// <summary>
     /// Backwards compatible setting for WebAuthn Level 1.
     /// Should be true only if <see cref="ResidentKey"/> is set to "required".
     /// </summary>
+    [JsonPropertyName("requireResidentKey")]
     public bool RequireResidentKey { get; set; } = false;
     
     /// <summary>
@@ -38,5 +43,6 @@ public class AuthenticatorSelectionCriteria
     /// <para>Defaults to "preferred"</para>
     /// </summary>
     /// <example>preferred</example>
+    [JsonPropertyName("userVerification")]
     public string UserVerification { get; set; } = "preferred";
 }

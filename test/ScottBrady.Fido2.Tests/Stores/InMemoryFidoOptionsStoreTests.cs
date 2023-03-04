@@ -9,7 +9,7 @@ namespace ScottBrady.Fido2.Tests.Stores;
 
 public class InMemoryFidoOptionsStoreTests
 {
-    private InMemoryFidoOptionsStore sut = new InMemoryFidoOptionsStore();
+    private readonly InMemoryFidoOptionsStore sut = new InMemoryFidoOptionsStore();
 
     [Fact]
     public async Task Store_RegistrationOptions_WhenOptionsDoNotExist_ExpectOptionsStored()
@@ -25,11 +25,13 @@ public class InMemoryFidoOptionsStoreTests
     public async Task Store_RegistrationOptions_WhenOptionsExist_ExpectOptionsOverwritten()
     {
         var challenge = RandomNumberGenerator.GetBytes(16);
-        
-        var oldOptions = new PublicKeyCredentialCreationOptions { Challenge = challenge, User = new PublicKeyCredentialUserEntity {Id = RandomNumberGenerator.GetBytes(32)}};
+
+        var oldOptions = new PublicKeyCredentialCreationOptions
+            { Challenge = challenge, User = new PublicKeyCredentialUserEntity(RandomNumberGenerator.GetBytes(32), "Scott") };
         InMemoryFidoOptionsStore.RegistrationOptions[InMemoryFidoOptionsStore.CreateKey(challenge)] = oldOptions;
-        
-        var newOptions = new PublicKeyCredentialCreationOptions { Challenge = challenge, User = new PublicKeyCredentialUserEntity {Id = RandomNumberGenerator.GetBytes(32)}};
+
+        var newOptions = new PublicKeyCredentialCreationOptions
+            { Challenge = challenge, User = new PublicKeyCredentialUserEntity(RandomNumberGenerator.GetBytes(32), "Bob") };
         await sut.Store(newOptions);
 
         InMemoryFidoOptionsStore.RegistrationOptions[InMemoryFidoOptionsStore.CreateKey(challenge)].Should().Be(newOptions);
@@ -39,7 +41,8 @@ public class InMemoryFidoOptionsStoreTests
     public async Task TakeRegistrationOptions_WhenOptionsExist_ExpectCorrectOptions()
     {
         var challenge = RandomNumberGenerator.GetBytes(16);
-        var expectedOptions = new PublicKeyCredentialCreationOptions { Challenge = challenge, User = new PublicKeyCredentialUserEntity {Id = RandomNumberGenerator.GetBytes(32)}};
+        var expectedOptions = new PublicKeyCredentialCreationOptions
+            { Challenge = challenge, User = new PublicKeyCredentialUserEntity(RandomNumberGenerator.GetBytes(32), "Scott") };
         InMemoryFidoOptionsStore.RegistrationOptions[InMemoryFidoOptionsStore.CreateKey(challenge)] = expectedOptions;
 
         var options = await sut.TakeRegistrationOptions(challenge);
