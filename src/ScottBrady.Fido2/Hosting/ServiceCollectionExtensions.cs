@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using ScottBrady.Fido2.Cryptography;
+using ScottBrady.Fido2.Parsers;
 using ScottBrady.Fido2.Stores;
 
 namespace ScottBrady.Fido2;
@@ -19,14 +20,19 @@ public static class ServiceCollectionExtensions
     {
         services.Configure(configureOptions);
 
+        services.AddScoped<ClientDataParser>();
+        services.AddScoped<AttestationObjectParser>();
+        services.AddScoped<AuthenticatorDataParser>();
+        
         services.AddScoped<IFidoSignatureValidator, FidoSignatureValidator>();
+        
+        
         
         // TODO: replace in-memory options store
         services.AddScoped<IFidoOptionsStore, InMemoryFidoOptionsStore>();
         
         services.AddScoped<IFidoAuthenticationService, FidoAuthenticationService>();
-        services.AddScoped<FidoRegistrationService>(
-            (s) => new FidoRegistrationService(new InMemoryFidoOptionsStore(), s.GetRequiredService<IOptions<FidoOptions>>().Value));
+        services.AddScoped<FidoRegistrationService>();
 
         return services;
     }

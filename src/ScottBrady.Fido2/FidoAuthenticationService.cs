@@ -69,8 +69,7 @@ public class FidoAuthenticationService : IFidoAuthenticationService
         // TODO: set/override timeout
         // TODO: global RPID
         // TODO: set/override extensions?
-
-
+        
         var key = await keyStore.GetByUsername(request.Username);
         if (key == null) throw new FidoException("Unknown user"); // TODO: return enumeration resistant response?
 

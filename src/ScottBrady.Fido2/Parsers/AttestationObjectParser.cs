@@ -7,7 +7,12 @@ namespace ScottBrady.Fido2.Parsers;
 
 public class AttestationObjectParser
 {
-    private readonly AuthenticatorDataParser authenticatorDataParser = new AuthenticatorDataParser();
+    private readonly AuthenticatorDataParser authenticatorDataParser;
+
+    public AttestationObjectParser(AuthenticatorDataParser authenticatorDataParser)
+    {
+        this.authenticatorDataParser = authenticatorDataParser ?? throw new ArgumentNullException(nameof(authenticatorDataParser));
+    }
     
     public AttestationObject Parse(ReadOnlySpan<byte> attestationObject)
     {

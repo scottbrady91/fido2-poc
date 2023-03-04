@@ -3,6 +3,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.Extensions.Options;
 using ScottBrady.Fido2.Cryptography;
 using ScottBrady.Fido2.Models;
 using ScottBrady.Fido2.Parsers;
@@ -49,7 +50,7 @@ public class HappyPathTests
     [Fact]
     public void AttestationObjectParser_Parse()
     {
-        var sut = new AttestationObjectParser();
+        var sut = new AttestationObjectParser(new AuthenticatorDataParser());
         var attestationObject = sut.Parse(RegistrationData.TestAttestationObject);
         
         attestationObject.StatementFormat.Should().Be("none");
@@ -78,10 +79,15 @@ public class HappyPathTests
         {
             Challenge = RegistrationData.TestChallenge,
             User = new PublicKeyCredentialUserEntity(RandomNumberGenerator.GetBytes(32), "Scott", "Scott"),
-            PublicKeyCredentialParameters = new []{new PublicKeyCredentialParameters{Type = "public-key", Algorithm = int.Parse(CoseConstants.Algorithms.ES256)}}
+            PublicKeyCredentialParameters = new[] { new PublicKeyCredentialParameters { Type = "public-key", Algorithm = int.Parse(CoseConstants.Algorithms.ES256) } }
         });
-        
-        var sut = new FidoRegistrationService(optionsStore, new FidoOptions());
+
+        var sut = new FidoRegistrationService(
+            new ClientDataParser(),
+            new AttestationObjectParser(new AuthenticatorDataParser()),
+            optionsStore,
+            new InMemoryFidoKeyStore(),
+            new OptionsWrapper<FidoOptions>(new FidoOptions { RelyingPartyId = "localhost" }));
         
         await sut.Complete(new PublicKeyCredential
         {

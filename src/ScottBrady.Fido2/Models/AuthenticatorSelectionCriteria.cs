@@ -21,7 +21,7 @@ public class AuthenticatorSelectionCriteria
     
     /// <summary>
     /// <para>The extent to which the relying party (web server) requires a client-side discoverable credential (think usernameless authentication).
-    /// If not present, the client (WebAuthn API) will treat the value as "required" if <see cref="RequireResidentKey"/> is true or discourage if false or absent.
+    /// If not present, the client (WebAuthn API) will treat the value as "required" if <see cref="RequireResidentKey"/> is true or "discouraged" if false or absent.
     /// Should be a <a href="https://www.w3.org/TR/webauthn-2/#enum-residentKeyRequirement">Resident Key Requirement</a>, but open to future extensibility.</para>
     /// <para>Unknown values will be ignored by the client.</para> 
     /// </summary>

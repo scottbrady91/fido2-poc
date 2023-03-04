@@ -1,17 +1,28 @@
 ﻿<html lang="en">
 <body>
-<h1>Click to register new (ES256 or RS256)</h1>
+<h1>WebAuthn sample (ES256 or RS256)</h1>
 <div>
-    <label for="username">Username: </label>
-    <input id="username" type="text" />
-    
-    <label for="authenticatorAttachment">Authenticator attachment: </label>
-    <select id="authenticatorAttachment">
-        <option selected value>none</option>
-        <option value="platform">platform</option>
-        <option value="cross-platform">cross-platform</option>
-    </select>
-
+    <div>
+        <label for="username">Username: </label>
+        <input id="username" type="text" />
+    </div>
+    <div>
+        <label for="authenticatorAttachment">Authenticator attachment: </label>
+        <select id="authenticatorAttachment">
+            <option selected value>none</option>
+            <option value="platform">platform</option>
+            <option value="cross-platform">cross-platform</option>
+        </select>
+    </div>
+    <div>
+        <label for="userVerification">User verification: </label>
+        <select id="userVerification">
+            <option selected value>browser default</option>
+            <option value="required">required</option>
+            <option value="preferred">preferred</option>
+            <option value="discouraged">discouraged</option>
+        </select>
+    </div>
 </div>
 <button onclick="register()">register</button>
 <button onclick="authenticate()">authenticate</button>
@@ -25,18 +36,16 @@
     async function register() {
 
         // get registration options from relying party
-        let username = document.getElementById("username").value;
-        let authenticatorAttachment = document.getElementById("authenticatorAttachment").value;
         let response = await fetch("/fido/register", {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                username: username,
-                displayName: username,
+                username: document.getElementById("username").value,
                 authenticatorSelection: {
-                    authenticatorAttachment: authenticatorAttachment,
+                    authenticatorAttachment: document.getElementById("authenticatorAttachment").value,
+                    userVerification: document.getElementById("userVerification").value,
                     attestation: "none"
                 }
             })
@@ -93,14 +102,13 @@
     async function authenticate() {
 
         // get authentication options from relying party
-        let username = document.getElementById("username").value;
         let response = await fetch("/fido/authenticate", {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                "username": username
+                "username": document.getElementById("username").value
             })
         });
 

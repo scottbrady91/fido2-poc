@@ -4,7 +4,11 @@ using ScottBrady.Fido2;
 using ScottBrady.Fido2.Stores;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddWebAuthn(options => options.RelyingPartyName = "SB Test")
+builder.Services.AddWebAuthn(options =>
+    {
+        options.RelyingPartyId = "localhost";
+        options.RelyingPartyName = "SB Test";
+    })
     .AddInMemoryKeyStore();
 
 var app = builder.Build();
