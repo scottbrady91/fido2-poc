@@ -22,7 +22,8 @@ public class FidoAuthenticationRequest
     /// </param>
     public FidoAuthenticationRequest(string username)
     {
-        Username = username ?? throw new ArgumentNullException(nameof(username));
+        if (string.IsNullOrWhiteSpace(username)) throw new ArgumentNullException(nameof(username));
+        Username = username;
     }
     
     /// <inheritdoc cref="PublicKeyCredentialUserEntity.Name"/>

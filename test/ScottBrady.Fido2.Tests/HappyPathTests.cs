@@ -14,14 +14,14 @@ namespace ScottBrady.Fido2.Tests;
 // Basic happy path tests using data from Windows Hello
 public class HappyPathTests
 {
-    private class RegistrationData
+    private static class RegistrationData
     {
         public static readonly byte[] TestChallenge = Convert.FromBase64String("V2pRWnLOxb+7Q/Vc5B495Q==");
         public static readonly byte[] TestClientDataJson = Convert.FromBase64String("eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiVjJwUlduTE94Yi03UV9WYzVCNDk1USIsIm9yaWdpbiI6Imh0dHBzOi8vbG9jYWxob3N0OjUwMDAiLCJjcm9zc09yaWdpbiI6ZmFsc2V9");
         public static readonly byte[] TestAttestationObject = Convert.FromBase64String("o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVikSZYN5YgOjGh0NBcPZHZgW4/krrmihjLHmVzzuoMdl2NFAAAAAAAAAAAAAAAAAAAAAAAAAAAAICVrJnYJupd8EWxwKQVuGJuh6RrCDEYDMvlND9ww67qRpQECAyYgASFYIID3OZq4HO2dCKLVsbYoCdwSAhgcoxnMBPV5Si0ryBaMIlggoXBwitSsaA4PKUEIfMAHcDQLFgkgqdqNZMcJ3gXKETY=");
     }
 
-    private class AuthenticationData
+    private static class AuthenticationData
     {
         public const string TestCredential = "{\"1\":2,\"3\":-7,\"-1\":1,\"-2\":\"sSV4_lv6YfTEWIo9KeXIbUu3DIxGd6eS3j55AW9h5Pw\",\"-3\":\"HEOhKFqBrULbgtM1mRkNFs8Nw_EGCuJVRgTgzieWMOk\"}";
         public const string TestId = "boXuxyyEyBO0JAV1gvuC_oifQXhgj4cxLfA5sa-cnaA";
@@ -110,7 +110,7 @@ public class HappyPathTests
             Counter = 0
         });
 
-        var sut = new FidoAuthenticationService(optionsStore, keyStore);
+        var sut = new FidoAuthenticationService(optionsStore, new FidoSignatureValidator(), keyStore);
         
         await sut.Complete(new PublicKeyCredential
         {

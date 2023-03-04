@@ -39,6 +39,9 @@ public static class CoseConstants
         public const string EdDSA = "-8";
         public const string ES384 = "-35";
         public const string ES512 = "-36";
+        public const string PS256 = "-37";
+        public const string PS384 = "-38";
+        public const string PS512 = "-39";
         public const string ES256K = "-47";
         public const string RS256 = "-257";
         public const string RS384 = "-258";

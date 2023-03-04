@@ -12,8 +12,7 @@ public class EcdsaSignatureValidationStrategyTests
     [Fact]
     public void DeserializeSignature()
     {
-        var sut = new EcdsaSignatureValidationStrategy();
-        var signature = sut.DeserializeSignature(TestSignature);
+        var signature = EcdsaSignatureValidationStrategy.DecodeSignature(TestSignature);
 
         signature.Should().NotBeEmpty();
     }

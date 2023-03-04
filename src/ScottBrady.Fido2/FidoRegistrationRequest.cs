@@ -27,8 +27,11 @@ public class FidoRegistrationRequest
     /// </param>
     public FidoRegistrationRequest(string username, string userDisplayName)
     {
-        Username = username ?? throw new ArgumentNullException(nameof(username));
-        UserDisplayName = userDisplayName ?? throw new ArgumentNullException(nameof(userDisplayName));
+        if (string.IsNullOrWhiteSpace(username)) throw new ArgumentNullException(nameof(username));
+        if (string.IsNullOrWhiteSpace(userDisplayName)) throw new ArgumentNullException(nameof(username));
+
+        Username = username;
+        UserDisplayName = userDisplayName;
     }
 
     /// <inheritdoc cref="PublicKeyCredentialUserEntity.Name"/>

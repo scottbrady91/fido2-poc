@@ -3,10 +3,21 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace ScottBrady.Fido2.Models;
-// TODO: review required fields and approach to validation
 
+/// <summary>
+/// The authentication options created by the WebAuthn relying party.
+/// Used when calling navigator.credentials.get(). 
+/// </summary>
+/// <remarks>
+/// Implements WebAuthn's  <a href="https://www.w3.org/TR/webauthn-2/#dictionary-assertion-options">PublicKeyCredentialRequestOptions</a> structure.
+/// </remarks>
 public class PublicKeyCredentialRequestOptions
 {
+    /// <summary>
+    /// Creates a new PublicKeyCredentialRequestOptions.
+    /// </summary>
+    /// <param name="challenge">A cryptographically random challenge value</param>
+    /// <exception cref="ArgumentNullException">Missing challenge</exception>
     [JsonConstructor]
     public PublicKeyCredentialRequestOptions(byte[] challenge)
     {
