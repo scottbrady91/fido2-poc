@@ -72,5 +72,5 @@ public class AuthenticatorData
     /// Further authenticator data, defined as extensions.
     /// Not used by this library.
     /// </summary>
-    public CBORObject Extensions { get; set; }
+    public CBORObject Extensions { get; set; } // TODO: remove use of CBOR in model
 }

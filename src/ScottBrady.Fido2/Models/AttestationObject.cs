@@ -21,7 +21,7 @@ public class AttestationObject
     /// The attestation statement.
     /// Provides proof about the characteristics of the authenticator, such as its construction and make/model.
     /// </summary>
-    public CBORObject Statement { get; set; }
+    public CBORObject Statement { get; set; }  // TODO: remove use of CBOR in model
     
     /// <summary>
     /// The authenticator data.

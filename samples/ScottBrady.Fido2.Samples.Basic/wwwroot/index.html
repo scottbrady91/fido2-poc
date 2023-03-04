@@ -28,45 +28,46 @@
         let options = await response.json();
         options.challenge = new Uint8Array(options.challenge);
         options.user.id = new Uint8Array(options.user.id);
-        console.log("options:", options);
 
         // create new credential
         let credential = await navigator.credentials.create({publicKey: options});
         
-        console.log(credential);
-        console.log("rawId", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))));
-        console.log("attestationObject", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))));
-        console.log("clientDataJSON", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON))));
-
+        // prepare credential to be sent to relying party
+        // body as base64 encoded (automatically decoded by ASP.NET Core)
+        let publicKeyCredential = JSON.stringify({
+            id: credential.id,
+            rawId: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))),
+            type: credential.type,
+            response: {
+                attestationObject: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))),
+                clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)))
+            }
+            // TODO: optional transports
+            // transports: credential.response.getTransports(), 
+            // TODO: other functions to test
+            // extensions: credential.getClientExtensionResults(),
+            // authenticatorData: credential.response.getAuthenticatorData(),
+            // publicKey: credential.response.getPublicKey(),
+            // publicKeyAlgorithm: credential.response.getPublicKeyAlgorithm(),
+        });
+        console.log(publicKeyCredential);
+        
         // send credentials to relying party
         let result = await fetch("/fido/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            
-            // body as base64 encoded (automatically decoded by ASP.NET Core)
-            body: JSON.stringify({
-                id: credential.id,
-                rawId: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))),
-                type: credential.type,
-                response: {
-                    attestationObject: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))),
-                    clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)))
-                }
-                // TODO: optional transports
-                // transports: credential.response.getTransports(), 
-                // TODO: other functions to test
-                // extensions: credential.getClientExtensionResults(),
-                // authenticatorData: credential.response.getAuthenticatorData(),
-                // publicKey: credential.response.getPublicKey(),
-                // publicKeyAlgorithm: credential.response.getPublicKeyAlgorithm(),
-            })
+            body: publicKeyCredential
         });
-        
+
+        // output result to UI
         if (result.ok) {
             let output = document.getElementById("result");
             output.innerText = "Registration complete";
+        } else {
+            let output = document.getElementById("result");
+            output.innerText = "Error!";
         }
     }
 
@@ -87,13 +88,9 @@
         // cleanup options (convert Arrays into Uint8Arrays)
         let options = await response.json();
         options.challenge = new Uint8Array(options.challenge);
-        console.log("options:", options);
-
         for (const allowCredential of options.allowCredentials) {
             allowCredential.id = new Uint8Array(allowCredential.id)
         }
-
-        console.log(options.allowCredentials);
 
         // authenticate credential
         let credential = await navigator.credentials.get({
@@ -103,14 +100,20 @@
             }
         });
 
-        
-        console.log(credential);
-        console.log("rawId", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))));
-        console.log("authenticatorData", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.authenticatorData))));
-        console.log("signature", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.signature))));
-        console.log("userHandle", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.userHandle))));
-        console.log("clientDataJSON", btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON))));
-
+        // prepare credential to be sent to relying party
+        // body as base64 encoded (automatically decoded by ASP.NET Core)
+        let publicKeyCredential = JSON.stringify({
+            id: credential.id,
+            rawId: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))),
+            type: credential.type,
+            response: {
+                authenticatorData: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.authenticatorData))),
+                signature: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.signature))),
+                userHandle: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.userHandle))),
+                clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)))
+            }
+        });
+        console.log(publicKeyCredential);
 
         // send result to relying party
         let result = await fetch("/fido/authenticate", {
@@ -118,24 +121,16 @@
             headers: {
                 "Content-Type": "application/json",
             },
-            
-            // body as base64 encoded (automatically decoded by ASP.NET Core)
-            body: JSON.stringify({
-                id: credential.id,
-                rawId: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId))),
-                type: credential.type,
-                response: {
-                    authenticatorData: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.authenticatorData))),
-                    signature: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.signature))),
-                    userHandle: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.userHandle))),
-                    clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)))
-                }
-            })
+            body: publicKeyCredential
         });
 
+        // output result to UI
         if (result.ok) {
             let output = document.getElementById("result");
             output.innerText = "Authentication complete";
+        } else {
+            let output = document.getElementById("result");
+            output.innerText = "Error!";
         }
     }
 </script>
