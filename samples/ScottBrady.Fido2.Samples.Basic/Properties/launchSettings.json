@@ -1,0 +1,13 @@
+﻿{
+  "profiles": {
+    "ScottBrady.Fido2.Samples.Basic": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:5000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

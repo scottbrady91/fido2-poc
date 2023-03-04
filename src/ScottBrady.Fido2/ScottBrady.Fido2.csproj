@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <!--<ImplicitUsings>enable</ImplicitUsings>-->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="PeterO.Cbor" Version="4.5.2" />
+        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.27.0" />
+    </ItemGroup>
+
+</Project>
