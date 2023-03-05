@@ -1,4 +1,4 @@
-using ScottBrady.Fido2.Cryptography;
+﻿using ScottBrady.Fido2.Cryptography;
 
 namespace ScottBrady.Fido2.Models;
 
@@ -46,7 +46,7 @@ public class AuthenticatorData
     /// The signature counter.
     /// Used to detect if an authenticator has been cloned.
     /// </summary>
-    public int SignCount { get; set; }
+    public uint SignCount { get; set; }
     
     
     /// <summary>

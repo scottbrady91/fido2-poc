@@ -86,7 +86,7 @@ public class JsonFidoKeyStore : IFidoKeyStore
     }
 
     /// <inheritdoc />
-    public Task UpdateCounter(byte[] credentialId, int counter)
+    public Task UpdateCounter(byte[] credentialId, uint counter)
     {
         if (credentialId == null) throw new ArgumentNullException(nameof(credentialId));
         if (counter <= 0) throw new FidoException("Cannot update counter - must not be less than or equal to zero");
@@ -128,7 +128,7 @@ public class JsonFidoKeyStore : IFidoKeyStore
         public byte[] CredentialId { get; set; }
         public string DeviceFriendlyName { get; set; }
     
-        public int Counter { get; set; }
+        public uint Counter { get; set; }
         public string KeyAsJson { get; set; }
 
         public DateTime? Created { get; set; }

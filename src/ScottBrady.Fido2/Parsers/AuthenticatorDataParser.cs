@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Linq;
 using PeterO.Cbor;
@@ -22,12 +23,12 @@ public class AuthenticatorDataParser
         parsedData.UserVerified = (flags & Flags.UserVerified) != 0;
         parsedData.AttestedCredentialDataIncluded = (flags & Flags.AttestedCredentialDataIncluded) != 0;
         parsedData.ExtensionDataIncluded = (flags & Flags.ExtensionsDataIncluded) != 0;
-            
-        parsedData.SignCount = Convert.ToInt32(BitConverter.ToUInt32(ms.ReadBytes(4).Reverse().ToArray())); // TODO: wtf
+        
+        parsedData.SignCount = BinaryPrimitives.ReadUInt32BigEndian(ms.ReadBytes(4));
             
         if (parsedData.AttestedCredentialDataIncluded)
         {
-            parsedData.Aaguid = ms.ReadBytes(16);
+            parsedData.Aaguid = ms.ReadBytes(16); // TODO: handle AAGUID and store
 
             var credentialIdLength = BitConverter.ToUInt16(ms.ReadBytes(2).Reverse().ToArray());
             parsedData.CredentialId = ms.ReadBytes(credentialIdLength);
