@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
 using AutoFixture;
+using Microsoft.Extensions.Options;
 using ScottBrady.Fido2.Cryptography;
 using ScottBrady.Fido2.Models;
 using Xunit;
@@ -9,7 +10,7 @@ namespace ScottBrady.Fido2.Tests.Cryptography;
 
 public class FidoSignatureValidatorTests
 {
-    private readonly FidoSignatureValidator sut = new FidoSignatureValidator();
+    private readonly FidoSignatureValidator sut = new FidoSignatureValidator(new OptionsWrapper<FidoOptions>(new FidoOptions()));
     
     [Fact]
     public void HasValidSignature_WhenAlgorithmUnsupported_ExpectFidoException()

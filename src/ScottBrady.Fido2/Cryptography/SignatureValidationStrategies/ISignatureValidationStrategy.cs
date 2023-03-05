@@ -4,7 +4,6 @@ namespace ScottBrady.Fido2.Cryptography;
 
 /// <summary>
 /// Strategy for WebAuthn signature validation during authentication.
-/// TODO: document how to register new strategies 
 /// </summary>
 public interface ISignatureValidationStrategy
 {

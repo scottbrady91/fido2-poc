@@ -69,7 +69,7 @@ public class FidoAuthenticationService : IFidoAuthenticationService
     /// <inheritdoc />
     public async Task<PublicKeyCredentialRequestOptions> Initiate(FidoAuthenticationRequest request)
     {
-        // TODO: how to handle requests by user ID>
+        // TODO: how to handle requests by user ID?
         var keys = await keyStore.GetByUsername(request.Username);
         if (keys == null) throw new FidoException("Unknown user"); // TODO: return enumeration resistant response?
 

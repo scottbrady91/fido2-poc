@@ -1,5 +1,8 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using ScottBrady.Fido2.Cryptography;
 
 namespace ScottBrady.Fido2;
 
@@ -25,6 +28,26 @@ public class FidoOptions
     /// </summary>
     /// <example>ACME Corp</example>
     public string RelyingPartyName { get; set; }
+
+    /// <summary>
+    /// A dictionary of strategies for WebAuthn signature validation.
+    /// Key must be <a href="https://www.iana.org/assignments/cose/cose.xhtml#algorithms">an algorithm in from the COSE standard</a>.
+    /// See <see cref="CoseConstants.Algorithms"/> constants class for known algorithm values.
+    /// </summary>
+    /// <value>Out-of-the-box support for ES256, ES384, ES512, RS256, RS384, and RS512</value>
+    // TODO: how to improve strategy? Leave in options? Copy every time? Move to factory?
+    public Dictionary<string, Func<ISignatureValidationStrategy>> SigningAlgorithmStrategies = 
+        new Dictionary<string, Func<ISignatureValidationStrategy>>
+        {
+            { CoseConstants.Algorithms.ES256, () => new EcdsaSignatureValidationStrategy() },
+            { CoseConstants.Algorithms.ES384, () => new EcdsaSignatureValidationStrategy() },
+            { CoseConstants.Algorithms.ES512, () => new EcdsaSignatureValidationStrategy() },
+            { CoseConstants.Algorithms.RS256, () => new RsaSignatureValidationStrategy() },
+            { CoseConstants.Algorithms.RS384, () => new RsaSignatureValidationStrategy() },
+            { CoseConstants.Algorithms.RS512, () => new RsaSignatureValidationStrategy() }
+            // TODO: RS1?
+            // TODO: EdDSA?
+        };
 
     public JsonSerializerOptions JsonOptions { get; set; } = new JsonSerializerOptions
     {

@@ -125,7 +125,7 @@ public class HappyPathTests
 
         var sut = new FidoAuthenticationService(
             optionsStore,
-            new FidoSignatureValidator(),
+            new FidoSignatureValidator(new OptionsWrapper<FidoOptions>(new FidoOptions { RelyingPartyId = RelyingPartyId })),
             keyStore,
             new OptionsWrapper<FidoOptions>(new FidoOptions { RelyingPartyId = RelyingPartyId }));
         

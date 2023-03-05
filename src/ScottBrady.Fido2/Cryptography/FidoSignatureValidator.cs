@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using ScottBrady.Fido2.Models;
 
 namespace ScottBrady.Fido2.Cryptography;
@@ -23,20 +22,18 @@ public interface IFidoSignatureValidator
 /// <inheritdoc />
 public class FidoSignatureValidator : IFidoSignatureValidator
 {
-    // TODO: how to make extensible? Move to options? Move to factory?
-    private readonly IReadOnlyDictionary<string, Func<ISignatureValidationStrategy>> validators =
-        new ReadOnlyDictionary<string, Func<ISignatureValidationStrategy>>(new Dictionary<string, Func<ISignatureValidationStrategy>>
-        {
-            { CoseConstants.Algorithms.ES256, () => new EcdsaSignatureValidationStrategy() },
-            { CoseConstants.Algorithms.ES384, () => new EcdsaSignatureValidationStrategy() },
-            { CoseConstants.Algorithms.ES512, () => new EcdsaSignatureValidationStrategy() },
-            { CoseConstants.Algorithms.RS256, () => new RsaSignatureValidationStrategy() },
-            { CoseConstants.Algorithms.RS384, () => new RsaSignatureValidationStrategy() },
-            { CoseConstants.Algorithms.RS512, () => new RsaSignatureValidationStrategy() }
-            // TODO: RS1?
-            // TODO: EdDSA?
-        });
+    private readonly FidoOptions options;
 
+    /// <summary>
+    /// Creates a new FidoSignatureValidator.
+    /// </summary>
+    /// <param name="options"></param>
+    public FidoSignatureValidator(IOptions<FidoOptions> options)
+    {
+        if (options == null) throw new ArgumentNullException(nameof(options));
+        this.options = options.Value;
+    }
+    
     /// <inheritdoc />
     public Task<bool> HasValidSignature(AuthenticatorAssertionResponse response, CredentialPublicKey key)
     {
@@ -45,7 +42,7 @@ public class FidoSignatureValidator : IFidoSignatureValidator
         
         var data = ParseData(response.ClientDataJson, response.AuthenticatorData);
 
-        if (!validators.TryGetValue(key.Algorithm, out var strategy)) throw new FidoException($"Unsupported COSE algorithm of {key.Algorithm}");
+        if (!options.SigningAlgorithmStrategies.TryGetValue(key.Algorithm, out var strategy)) throw new FidoException($"Unsupported COSE algorithm of {key.Algorithm}");
 
         var isValid = strategy().IsValidSignature(data, response.Signature, key);
         return Task.FromResult(isValid);
