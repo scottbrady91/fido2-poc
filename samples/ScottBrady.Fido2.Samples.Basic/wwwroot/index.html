@@ -2,29 +2,38 @@
 <body>
 <h1>WebAuthn sample (ES256 or RS256)</h1>
 <div>
-    <div>
-        <label for="username">Username: </label>
-        <input id="username" type="text" />
-    </div>
-    <div>
-        <label for="authenticatorAttachment">Authenticator attachment: </label>
-        <select id="authenticatorAttachment">
-            <option selected value>none</option>
-            <option value="platform">platform</option>
-            <option value="cross-platform">cross-platform</option>
-        </select>
-    </div>
-    <div>
-        <label for="userVerification">User verification: </label>
-        <select id="userVerification">
-            <option selected value>browser default</option>
-            <option value="required">required</option>
-            <option value="preferred">preferred</option>
-            <option value="discouraged">discouraged</option>
-        </select>
-    </div>
+    <label for="username">Username: </label>
+    <input id="username" type="text"/>
+</div>
+
+<div>
+    <label for="reg-authenticatorAttachment">Authenticator attachment: </label>
+    <select id="reg-authenticatorAttachment">
+        <option selected value>none</option>
+        <option value="platform">platform</option>
+        <option value="cross-platform">cross-platform</option>
+    </select>
+</div>
+<div>
+    <label for="reg-userVerification">User verification (registration): </label>
+    <select id="reg-userVerification">
+        <option selected value>browser default</option>
+        <option value="required">required</option>
+        <option value="preferred">preferred</option>
+        <option value="discouraged">discouraged</option>
+    </select>
 </div>
 <button onclick="register()">register</button>
+
+<div>
+    <label for="auth-userVerification">User verification (authentication): </label>
+    <select id="auth-userVerification">
+        <option selected value>browser default</option>
+        <option value="required">required</option>
+        <option value="preferred">preferred</option>
+        <option value="discouraged">discouraged</option>
+    </select>
+</div>
 <button onclick="authenticate()">authenticate</button>
 <code id="result"></code>
 
@@ -32,6 +41,8 @@
     if (!window.PublicKeyCredential) {
         console.error("WebAuthn not supported by browser!")
     }
+    
+    let debugCredential = null;
 
     async function register() {
 
@@ -44,8 +55,8 @@
             body: JSON.stringify({
                 username: document.getElementById("username").value,
                 authenticatorSelection: {
-                    authenticatorAttachment: document.getElementById("authenticatorAttachment").value,
-                    userVerification: document.getElementById("userVerification").value,
+                    authenticatorAttachment: document.getElementById("reg-authenticatorAttachment").value,
+                    userVerification: document.getElementById("reg-userVerification").value,
                     attestation: "none"
                 }
             })
@@ -59,6 +70,7 @@
 
         // create new credential
         let credential = await navigator.credentials.create({publicKey: options});
+        debugCredential = credential
 
         // prepare credential to be sent to relying party
         // body as base64 encoded (automatically decoded by ASP.NET Core)
@@ -70,13 +82,8 @@
                 attestationObject: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.attestationObject))),
                 clientDataJSON: btoa(String.fromCharCode.apply(null, new Uint8Array(credential.response.clientDataJSON)))
             }
-            // TODO: optional transports
-            // transports: credential.response.getTransports(), 
-            // TODO: other functions to test
-            // extensions: credential.getClientExtensionResults(),
-            // authenticatorData: credential.response.getAuthenticatorData(),
-            // publicKey: credential.response.getPublicKey(),
-            // publicKeyAlgorithm: credential.response.getPublicKeyAlgorithm(),
+            // TODO: optional transports (get example)
+            // transports: credential.response.getTransports()
         });
         console.log(publicKeyCredential);
 
@@ -108,7 +115,8 @@
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                "username": document.getElementById("username").value
+                username: document.getElementById("username").value,
+                userVerification: document.getElementById("auth-userVerification").value,
             })
         });
 

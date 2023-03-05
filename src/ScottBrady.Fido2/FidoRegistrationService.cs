@@ -11,9 +11,36 @@ using ScottBrady.Fido2.Stores;
 
 namespace ScottBrady.Fido2;
 
-// https://www.w3.org/TR/webauthn-2/#sctn-registering-a-new-credential
-public class FidoRegistrationService
+/// <summary>
+/// WebAuthn registration service.
+/// Follows standardized procedure to <a href="https://www.w3.org/TR/webauthn-2/#sctn-registering-a-new-credential">verify registering a new credential</a>.
+/// </summary>
+public interface IFidoRegistrationService
 {
+    /// <summary>
+    /// Initiates registration by generating and storing <see cref="PublicKeyCredentialCreationOptions"/>.
+    /// </summary>
+    /// <param name="request">
+    /// Request-specific data for initiating registration.
+    /// Sets user information and allows authenticator preferences to be overridden for an individual request.
+    /// </param>
+    /// <returns>
+    /// The <see cref="PublicKeyCredentialCreationOptions"/> to be passed into the WebAuthn API.
+    /// </returns>
+    Task<PublicKeyCredentialCreationOptions> Initiate(FidoRegistrationRequest request);
+    
+    /// <summary>
+    /// Completes registration by validating the <see cref="PublicKeyCredential"/> returned from the WebAuthn API against the original <see cref="PublicKeyCredentialCreationOptions"/>.
+    /// </summary>
+    /// <param name="credential">The credential returned from the WebAuthn API</param>
+    /// <returns>The registration result</returns>
+    Task<FidoRegistrationResult> Complete(PublicKeyCredential credential);
+}
+
+/// <inheritdoc />
+public class FidoRegistrationService : IFidoRegistrationService
+{
+    // TODO: make RP origin use HttpContext and/or make configurable
     private const string RpOrigin = "https://localhost:5000";
 
     private readonly ClientDataParser clientDataParser;
@@ -22,6 +49,9 @@ public class FidoRegistrationService
     private readonly IFidoKeyStore keyStore;
     private readonly FidoOptions configurationOptions;
 
+    /// <summary>
+    /// Creates a new <see cref="FidoRegistrationService"/>.
+    /// </summary>
     public FidoRegistrationService(
         ClientDataParser clientDataParser,
         AttestationObjectParser attestationObjectParser,
@@ -35,7 +65,8 @@ public class FidoRegistrationService
         this.keyStore = keyStore ?? throw new ArgumentNullException(nameof(keyStore));
         this.configurationOptions = configurationOptions?.Value ?? throw new ArgumentNullException(nameof(configurationOptions));
     }
-    
+
+    /// <inheritdoc />
     public async Task<PublicKeyCredentialCreationOptions> Initiate(FidoRegistrationRequest request)
     {
         // TODO: overrides: timeout, algs (PublicKeyCredentialParameters), excludeCredentials?, extensions (pass though?)
@@ -57,7 +88,8 @@ public class FidoRegistrationService
 
         return options;
     }
-    
+
+    /// <inheritdoc />
     public async Task<FidoRegistrationResult> Complete(PublicKeyCredential credential)
     {
         if (credential.Response is not AuthenticatorAttestationResponse response) throw new FidoException("Incorrect response - not of type AuthenticatorAttestationResponse");
@@ -89,7 +121,6 @@ public class FidoRegistrationService
         if (options.AuthenticatorSelectionCriteria?.UserVerification == WebAuthnConstants.UserVerificationRequirement.Required && !attestationObject.AuthenticatorData.UserVerified)
             throw new FidoException("User verification required but user did not verify their identity with the authenticator");
 
-        // TODO: check if alg was requested
         if (options.PublicKeyCredentialParameters.All(x => x.Algorithm.ToString() != attestationObject.AuthenticatorData.CredentialPublicKey.Algorithm))
             throw new FidoException($"Unsupported algorithm of '{attestationObject.AuthenticatorData.CredentialPublicKey.Algorithm}'");
         

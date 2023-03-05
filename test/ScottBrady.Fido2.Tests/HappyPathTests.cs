@@ -3,7 +3,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using ScottBrady.Fido2.Cryptography;
 using ScottBrady.Fido2.Models;
@@ -124,7 +123,11 @@ public class HappyPathTests
             Counter = 0
         });
 
-        var sut = new FidoAuthenticationService(optionsStore, new FidoSignatureValidator(), keyStore);
+        var sut = new FidoAuthenticationService(
+            optionsStore,
+            new FidoSignatureValidator(),
+            keyStore,
+            new OptionsWrapper<FidoOptions>(new FidoOptions { RelyingPartyId = RelyingPartyId }));
         
         await sut.Complete(new PublicKeyCredential
         {

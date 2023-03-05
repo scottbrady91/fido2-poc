@@ -2,7 +2,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using ScottBrady.Fido2.Models;
 
 namespace ScottBrady.Fido2;
@@ -39,8 +38,9 @@ public static class WebApplicationExtensions
             return Results.BadRequest();
         });
 
-        app.MapPut("/fido/authenticate", async (FidoAuthenticationRequest request, IFidoAuthenticationService authenticationService) =>
+        app.MapPut("/fido/authenticate", async (HttpContext context, IFidoAuthenticationService authenticationService) =>
         {
+            var request = await JsonSerializer.DeserializeAsync<FidoAuthenticationRequest>(context.Request.Body, jsonSerializerOptions);
             var options = await authenticationService.Initiate(request);
             return Results.Json(options, jsonSerializerOptions, statusCode: 200);
         });
