@@ -40,11 +40,12 @@ public static class WebApplicationExtensions
             }
         });
 
-        app.MapPost("/fido/register", async (ILogger<FidoRegistrationService> logger, PublicKeyCredential response, FidoRegistrationService registrationService) =>
+        app.MapPost("/fido/register", async (HttpContext context, ILogger<FidoRegistrationService> logger, FidoRegistrationService registrationService) =>
         {
             try
             {
-                var result = await registrationService.Complete(response);
+                var credential = await JsonSerializer.DeserializeAsync<PublicKeyCredential>(context.Request.Body, JsonSerializerOptions);
+                var result = await registrationService.Complete(credential);
                 return result.IsSuccess ? Results.Json(result) : Results.BadRequest();
             }
             catch (Exception e)
@@ -69,10 +70,11 @@ public static class WebApplicationExtensions
             }
         });
 
-        app.MapPost("/fido/authenticate", async (ILogger<FidoRegistrationService> logger, PublicKeyCredential credential, IFidoAuthenticationService authenticationService) =>
+        app.MapPost("/fido/authenticate", async (HttpContext context, ILogger<FidoRegistrationService> logger, IFidoAuthenticationService authenticationService) =>
         {
             try
             {
+                var credential = await JsonSerializer.DeserializeAsync<PublicKeyCredential>(context.Request.Body, JsonSerializerOptions);
                 var result = await authenticationService.Complete(credential);
                 return result.IsSuccess ? Results.Json(result) : Results.BadRequest();
             }

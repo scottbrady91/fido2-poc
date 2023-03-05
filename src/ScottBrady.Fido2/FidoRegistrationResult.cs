@@ -9,8 +9,8 @@ namespace ScottBrady.Fido2;
 /// </summary>
 public class FidoRegistrationResult
 {
-    private FidoRegistrationResult() { }
-
+    private FidoRegistrationResult() { } // TODO: switch to ServerResponse? Or at least base type that can be returned via API?
+    
     internal static FidoRegistrationResult Success(FidoKey key, AttestationObject attestationObject) => new FidoRegistrationResult
     {
         UserId = key.UserId,

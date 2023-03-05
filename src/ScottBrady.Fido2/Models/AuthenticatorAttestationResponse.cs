@@ -14,13 +14,15 @@ public class PublicKeyCredential
 }
 
 [JsonConverter(typeof(AuthenticatorResponseJsonConverter))]
-public class AuthenticatorResponse
+public class AuthenticatorResponse // TODO: make abstract?
 {
+    [JsonPropertyName("clientDataJSON")]
     public byte[] ClientDataJson { get; set; }
 }
 
 
 public class AuthenticatorAttestationResponse : AuthenticatorResponse
 {
+    [JsonPropertyName("attestationObject")]
     public byte[] AttestationObject { get; set; }
 }

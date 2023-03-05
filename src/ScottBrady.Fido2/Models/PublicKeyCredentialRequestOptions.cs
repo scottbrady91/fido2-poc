@@ -48,13 +48,13 @@ public class PublicKeyCredentialRequestOptions
     /// <example>login.example.com</example>
     [JsonPropertyName("rpId")]
     public string RpId { get; set; }
-    
+
     /// <summary>
     /// An ordered collection of credentials that the identified user can use to authenticate with.
     /// The first credential is the most preferred.
     /// </summary>
     [JsonPropertyName("allowCredentials")]
-    public IEnumerable<PublicKeyCredentialDescriptor> AllowCredentials { get; set; }
+    public IEnumerable<PublicKeyCredentialDescriptor> AllowCredentials { get; set; } = new List<PublicKeyCredentialDescriptor>();
 
     /// <summary>
     /// <para>The relying party's requirement for user verification (e.g. a local PIN or biometric to use the authenticator).

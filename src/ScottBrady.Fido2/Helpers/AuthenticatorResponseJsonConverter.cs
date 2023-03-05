@@ -23,15 +23,24 @@ public class AuthenticatorResponseJsonConverter : JsonConverter<AuthenticatorRes
             {
                 return JsonSerializer.Deserialize<AuthenticatorAttestationResponse>(jsonObject, options);
             }
-            else
-            {
-                return JsonSerializer.Deserialize<AuthenticatorAssertionResponse>(jsonObject, options);
-            }
+
+            return JsonSerializer.Deserialize<AuthenticatorAssertionResponse>(jsonObject, options);
         }
     }
 
     public override void Write(Utf8JsonWriter writer, AuthenticatorResponse value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        if (value is AuthenticatorAttestationResponse attestationResponse)
+        {
+            JsonSerializer.Serialize(writer, attestationResponse, options);
+        }
+        else if (value is AuthenticatorAssertionResponse assertionResponse)
+        {
+            JsonSerializer.Serialize(writer, assertionResponse, options);
+        }
+        else
+        {
+            throw new NotImplementedException();
+        }
     }
 }

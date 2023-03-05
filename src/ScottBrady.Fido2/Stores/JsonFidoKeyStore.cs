@@ -32,7 +32,7 @@ public class JsonFidoKeyStore : IFidoKeyStore
     /// Creates a new JsonFidoKeyStore.
     /// Loads the JSON file's list of keys into memory.
     /// </summary>
-    /// <param name="filePath">The file path. Must have read & write permissions.</param>
+    /// <param name="filePath">The file path. Must have read and write permissions.</param>
     public JsonFidoKeyStore(string filePath)
     {
         this.filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));

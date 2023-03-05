@@ -74,13 +74,13 @@ public class PublicKeyCredentialCreationOptions
     /// </summary>
     [JsonPropertyName("timeout")]
     public int? Timeout { get; set; }
-    
+
     /// <summary>
     /// Credentials to ignore during registration.
     /// This can prevent multiple credentials being created for the same account on a single authenticator.
     /// </summary>
     [JsonPropertyName("excludeCredentials")]
-    public IEnumerable<PublicKeyCredentialDescriptor> ExcludeCredentials { get; set; }
+    public IEnumerable<PublicKeyCredentialDescriptor> ExcludeCredentials { get; set; } = new List<PublicKeyCredentialDescriptor>();
     
     /// <summary>
     /// Criteria that an authenticator must meet in order to complete registration.
