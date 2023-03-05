@@ -16,17 +16,17 @@ public class InMemoryFidoKeyStore : IFidoKeyStore
     public static readonly IList<FidoKey> Keys = new List<FidoKey>();
 
     /// <inheritdoc />
-    public Task<FidoKey> GetByUsername(string username)
+    public Task<IEnumerable<FidoKey>> GetByUsername(string username)
     {
         if (username == null) throw new ArgumentNullException(nameof(username));
         
-        FidoKey key;
+        IEnumerable<FidoKey> keys;
         lock (Keys)
         {
-            key = Keys.FirstOrDefault(x => x.Username == username);
+            keys = Keys.Where(x => x.Username == username).ToList();
         }
 
-        return Task.FromResult(key);
+        return Task.FromResult(keys);
     }
     
     /// <inheritdoc />

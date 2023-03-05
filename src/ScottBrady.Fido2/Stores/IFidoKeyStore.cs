@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ScottBrady.Fido2.Cryptography;
 
@@ -6,7 +7,7 @@ namespace ScottBrady.Fido2.Stores;
 
 public interface IFidoKeyStore
 {
-    Task<FidoKey> GetByUsername(string username);
+    Task<IEnumerable<FidoKey>> GetByUsername(string username);
     Task<FidoKey> GetByCredentialId(byte[] credentialId);
     Task Store(FidoKey key);
     Task UpdateCounter(byte[] credentialId, int counter);

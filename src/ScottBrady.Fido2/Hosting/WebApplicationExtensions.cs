@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using ScottBrady.Fido2.Models;
 
 namespace ScottBrady.Fido2;
@@ -34,7 +35,8 @@ public static class WebApplicationExtensions
         app.MapPost("/fido/register", async (PublicKeyCredential response, FidoRegistrationService registrationService) =>
         {
             var result = await registrationService.Complete(response);
-            return Results.Json(result);
+            if (result.IsSuccess) return Results.Json(result);
+            return Results.BadRequest();
         });
 
         app.MapPut("/fido/authenticate", async (FidoAuthenticationRequest request, IFidoAuthenticationService authenticationService) =>
@@ -46,7 +48,8 @@ public static class WebApplicationExtensions
         app.MapPost("/fido/authenticate", async (PublicKeyCredential credential, IFidoAuthenticationService authenticationService) =>
         {
             var result = await authenticationService.Complete(credential);
-            return Results.Json(result);
+            if (result.IsSuccess) return Results.Json(result);
+            return Results.BadRequest();
         });
 
         return app;

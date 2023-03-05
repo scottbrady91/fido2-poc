@@ -46,14 +46,13 @@ public class JsonFidoKeyStore : IFidoKeyStore
     }
 
     /// <inheritdoc />
-    public Task<FidoKey> GetByUsername(string username)
+    public Task<IEnumerable<FidoKey>> GetByUsername(string username)
     {
         if (username == null) throw new ArgumentNullException(nameof(username));
 
         lock (Keys)
         {
-            // TODO: should IFidoKeySotre.GetByUsername return IEnumerable<FidoKey>???
-            return Task.FromResult(Keys.FirstOrDefault(x => x.Username == username));
+            return Task.FromResult<IEnumerable<FidoKey>>(Keys.Where(x => x.Username == username).ToList());
         }
     }
 
@@ -64,7 +63,7 @@ public class JsonFidoKeyStore : IFidoKeyStore
 
         lock (Keys)
         {
-            return Task.FromResult(Keys.FirstOrDefault(x => x.CredentialId == credentialId));
+            return Task.FromResult(Keys.FirstOrDefault(x => x.CredentialId.SequenceEqual(credentialId)));
         }
     }
 

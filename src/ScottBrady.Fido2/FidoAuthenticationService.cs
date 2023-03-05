@@ -70,16 +70,17 @@ public class FidoAuthenticationService : IFidoAuthenticationService
         // TODO: global RPID
         // TODO: set/override extensions?
         
-        var key = await keyStore.GetByUsername(request.Username);
-        if (key == null) throw new FidoException("Unknown user"); // TODO: return enumeration resistant response?
+        var keys = await keyStore.GetByUsername(request.Username);
+        if (keys == null) throw new FidoException("Unknown user"); // TODO: return enumeration resistant response?
 
         var options = new PublicKeyCredentialRequestOptions(RandomNumberGenerator.GetBytes(32))
         {
             RpId = RpId,
-            AllowCredentials = new[] { new PublicKeyCredentialDescriptor(key.CredentialId) },
             // TODO: make AllowCredentials optional???
             UserVerification = request.UserVerification ?? WebAuthnConstants.UserVerificationRequirement.Preferred
         };
+
+        options.AllowCredentials = keys.Select(x => new PublicKeyCredentialDescriptor(x.CredentialId)).ToList();
         
         await optionsStore.Store(options);
 
@@ -100,11 +101,11 @@ public class FidoAuthenticationService : IFidoAuthenticationService
         
         if (options.AllowCredentials?.Any() == true)
         {
-            if (options.AllowCredentials.All(x => x.Id != credential.RawId))
+            if (options.AllowCredentials.All(x => !x.Id.SequenceEqual(credential.RawId)))
                 return FidoAuthenticationResult.Failure("Incorrect credential used - ID not present in requested credential list (allowCredentials)");
         }
         
-        var key = await keyStore.GetByCredentialId(Base64UrlEncoder.DecodeBytes(credential.Id));
+        var key = await keyStore.GetByCredentialId(credential.RawId);
         if (key == null) throw new Exception("Incorrect key");
 
         // TODO: also validate against user identified
