@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -58,7 +57,7 @@ public class HappyPathTests
         var attestationObject = sut.Parse(RegistrationData.TestAttestationObject);
         
         attestationObject.StatementFormat.Should().Be("none");
-        attestationObject.Statement.Values.Any().Should().BeFalse();
+        attestationObject.Statement.Length.Should().Be(1);
 
         attestationObject.AuthenticatorData.RpIdHash.Should().BeEquivalentTo(Convert.FromBase64String("SZYN5YgOjGh0NBcPZHZgW4/krrmihjLHmVzzuoMdl2M="));
         attestationObject.AuthenticatorData.UserPresent.Should().BeTrue();

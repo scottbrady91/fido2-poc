@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using PeterO.Cbor;
@@ -37,7 +37,7 @@ public class AuthenticatorDataParser
 
         if (parsedData.ExtensionDataIncluded)
         {
-            parsedData.Extensions = CBORObject.Read(ms);
+            parsedData.Extensions = CBORObject.Read(ms).EncodeToBytes();
         }
 
         return parsedData;

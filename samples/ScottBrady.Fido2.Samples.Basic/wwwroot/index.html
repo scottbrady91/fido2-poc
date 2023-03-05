@@ -70,7 +70,7 @@
 
         // create new credential
         let credential = await navigator.credentials.create({publicKey: options});
-        debugCredential = credential
+        debugCredential = credential // TODO: remove debugCredential (using for transports debugging)
 
         // prepare credential to be sent to relying party
         // body as base64 encoded (automatically decoded by ASP.NET Core)

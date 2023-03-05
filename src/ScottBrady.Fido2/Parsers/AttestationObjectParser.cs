@@ -22,7 +22,7 @@ public class AttestationObjectParser
         using (var ms = new MemoryStream(attestationObject.ToArray()))
         {
             cbor = CBORObject.Read(ms);
-            if (ms.Position != ms.Length) throw new Exception();
+            if (ms.Position != ms.Length) throw new FidoException("Invalid attestationObject length");
         }
         
         var attestationStatementFormat = cbor["fmt"]; // should be textstring
@@ -34,7 +34,7 @@ public class AttestationObjectParser
         return new AttestationObject
         {
             StatementFormat = attestationStatementFormat.AsString(),
-            Statement = attestationStatement,
+            Statement = attestationStatement.EncodeToBytes(),
             AuthenticatorData = authenticatorData
         };
     }

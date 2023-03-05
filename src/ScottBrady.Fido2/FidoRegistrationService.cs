@@ -94,7 +94,7 @@ public class FidoRegistrationService : IFidoRegistrationService
         
         var attestationObject = attestationObjectParser.Parse(response.AttestationObject);
         if (attestationObject.StatementFormat != "none") throw new FidoException("Incorrect statement format - only 'none' is supported");
-        if (attestationObject.Statement.Count != 0) throw new FidoException("Incorrect statement count - 'none' format expects 0 statements");
+        if (attestationObject.Statement.Length != 1) throw new FidoException("Incorrect statement count - 'none' format expects 0 statements");
         
         // var clientDataHash = SHA256.HashData(clientDataJson); // used for attestation statement validation
         // TODO: hook for attestation validation? Above checks enforce "none", but this could be extracted.

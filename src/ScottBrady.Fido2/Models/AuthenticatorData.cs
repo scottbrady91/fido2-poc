@@ -1,4 +1,3 @@
-﻿using PeterO.Cbor;
 using ScottBrady.Fido2.Cryptography;
 
 namespace ScottBrady.Fido2.Models;
@@ -72,5 +71,5 @@ public class AuthenticatorData
     /// Further authenticator data, defined as extensions.
     /// Not used by this library.
     /// </summary>
-    public CBORObject Extensions { get; set; } // TODO: remove use of CBOR in model
+    public byte[] Extensions { get; set; }
 }
