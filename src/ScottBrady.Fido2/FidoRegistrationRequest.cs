@@ -6,7 +6,7 @@ namespace ScottBrady.Fido2;
 
 /// <summary>
 /// Request-specific data for initiating registration.
-/// Sets user information and allows authenticator & attestation requirements to be overridden for an individual request.
+/// Sets user information and allows authenticator and attestation requirements to be overridden for an individual request.
 /// </summary>
 /// <remarks>
 /// Matches requirements for <a href="https://github.com/fido-alliance/conformance-test-tools-resources/blob/master/docs/FIDO2/Server/Conformance-Test-API.md#serverpublickeycredentialcreationoptionsrequest">

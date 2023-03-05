@@ -14,6 +14,8 @@ namespace ScottBrady.Fido2.Tests.Models;
 public class JsonSerializationTests
 {
     [Theory]
+    [InlineData(typeof(FidoRegistrationRequest))]
+    [InlineData(typeof(FidoAuthenticationRequest))]
     [InlineData(typeof(PublicKeyCredentialCreationOptions))]
     [InlineData(typeof(PublicKeyCredentialRequestOptions))]
     [InlineData(typeof(PublicKeyCredentialRpEntity))]

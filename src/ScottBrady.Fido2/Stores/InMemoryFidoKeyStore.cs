@@ -18,6 +18,8 @@ public class InMemoryFidoKeyStore : IFidoKeyStore
     /// <inheritdoc />
     public Task<FidoKey> GetByUsername(string username)
     {
+        if (username == null) throw new ArgumentNullException(nameof(username));
+        
         FidoKey key;
         lock (Keys)
         {
@@ -30,6 +32,8 @@ public class InMemoryFidoKeyStore : IFidoKeyStore
     /// <inheritdoc />
     public Task<FidoKey> GetByCredentialId(byte[] credentialId)
     {
+        if (credentialId == null) throw new ArgumentNullException(nameof(credentialId));
+        
         FidoKey key;
         lock (Keys)
         {
@@ -42,13 +46,15 @@ public class InMemoryFidoKeyStore : IFidoKeyStore
     /// <inheritdoc />
     public Task Store(FidoKey key)
     {
+        if (key == null) throw new ArgumentNullException(nameof(key));
+        
         lock (Keys)
         {
             // TODO: check if key already in use? Does that belong in "Store"?
 
             // TODO: system clock?
             key.Created = DateTime.UtcNow;
-            key.LastUsed = DateTime.UtcNow;;
+            key.LastUsed = DateTime.UtcNow;
 
             Keys.Add(key);
         }
@@ -59,6 +65,9 @@ public class InMemoryFidoKeyStore : IFidoKeyStore
     /// <inheritdoc />
     public Task UpdateCounter(byte[] credentialId, int counter)
     {
+        if (credentialId == null) throw new ArgumentNullException(nameof(credentialId));
+        if (counter <= 0) throw new FidoException("Cannot update counter - must not be less than or equal to zero");
+
         lock (Keys)
         {
             var key = Keys.FirstOrDefault(x => x.CredentialId.SequenceEqual(credentialId));

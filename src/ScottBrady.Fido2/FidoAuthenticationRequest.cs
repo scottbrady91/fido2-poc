@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 using ScottBrady.Fido2.Models;
 
 namespace ScottBrady.Fido2;
@@ -20,6 +21,7 @@ public class FidoAuthenticationRequest
     /// The user's username.
     /// This value can be displayed to the user and will be stored by the authenticator.
     /// </param>
+    [JsonConstructor]
     public FidoAuthenticationRequest(string username)
     {
         if (string.IsNullOrWhiteSpace(username)) throw new ArgumentNullException(nameof(username));
@@ -27,6 +29,7 @@ public class FidoAuthenticationRequest
     }
     
     /// <inheritdoc cref="PublicKeyCredentialUserEntity.Name"/>
+    [JsonPropertyName("username")]
     public string Username { get; set; }
 
     /// <summary>
@@ -36,5 +39,6 @@ public class FidoAuthenticationRequest
     /// <para>Defaults to "preferred"</para>
     /// </summary>
     /// <example>preferred</example>
+    [JsonPropertyName("userVerification")]
     public string UserVerification { get; set; } = WebAuthnConstants.UserVerificationRequirement.Preferred;
 }
