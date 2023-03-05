@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using ScottBrady.Fido2.Cryptography;
 using ScottBrady.Fido2.Parsers;
 using ScottBrady.Fido2.Stores;

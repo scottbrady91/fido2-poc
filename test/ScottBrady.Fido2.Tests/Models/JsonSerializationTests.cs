@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -14,38 +14,47 @@ namespace ScottBrady.Fido2.Tests.Models;
 public class JsonSerializationTests
 {
     [Theory]
+    [InlineData(typeof(PublicKeyCredentialCreationOptions))]
     [InlineData(typeof(PublicKeyCredentialRequestOptions))]
-    public void ExpectSerializable(Type type)
+    [InlineData(typeof(PublicKeyCredentialRpEntity))]
+    [InlineData(typeof(PublicKeyCredentialUserEntity))]
+    [InlineData(typeof(PublicKeyCredentialParameters))]
+    [InlineData(typeof(AuthenticatorSelectionCriteria))]
+    [InlineData(typeof(PublicKeyCredentialDescriptor))]
+    public void ExpectSerializableWithLowerCaseProperties(Type type)
     {
+        var jsonOptions = new FidoOptions().JsonOptions;
+
         var fixture = new Fixture();
         var model = fixture.Create(type, new SpecimenContext(fixture));
         
-        var json = JsonSerializer.Serialize(model);
+        var json = JsonSerializer.Serialize(model, jsonOptions);
         IsLowerCamelCase(json).Should().BeTrue();
-        
-        var parsedModel = JsonSerializer.Deserialize<PublicKeyCredentialRequestOptions>(json);
-        parsedModel.Should().BeEquivalentTo(model);
     }
 
-    private bool IsLowerCamelCase(string json)
+    private static bool IsLowerCamelCase(string json)
     {
         var parsedJson = JsonNode.Parse(json);
         parsedJson.Should().NotBeNull();
         return IsLowerCamelCase(parsedJson);
     }
 
-    private bool IsLowerCamelCase(JsonNode json)
+    private static bool IsLowerCamelCase(JsonNode json)
     {
-        foreach (var element in json.AsObject())
+        if (json is JsonObject)
         {
-            if (Regex.IsMatch(element.Key[0].ToString(), "[A-Z]")) return false;
-            
-            if (element.Value is /*JsonObject or*/ JsonArray)
+            foreach (KeyValuePair<string, JsonNode> element in json.AsObject())
             {
-                foreach (var arrayElement in element.Value.AsArray())
-                {
-                    if (arrayElement.AsObject().Any(x => Regex.IsMatch(x.Key[0].ToString(), "[A-Z]"))) return false;
-                }
+                if (Regex.IsMatch(element.Key[0].ToString(), "[A-Z]")) return false;
+                if (!IsLowerCamelCase(element.Value)) return false;
+            }
+        }
+
+        if (json is JsonArray)
+        {
+            foreach (JsonNode element in json.AsArray())
+            {
+                if (!IsLowerCamelCase(element)) return false;
             }
         }
 

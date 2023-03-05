@@ -1,5 +1,11 @@
-﻿namespace ScottBrady.Fido2;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
+namespace ScottBrady.Fido2;
+
+/// <summary>
+/// Library configuration options.
+/// </summary>
 public class FidoOptions
 {
     /// <summary>
@@ -19,4 +25,11 @@ public class FidoOptions
     /// </summary>
     /// <example>ACME Corp</example>
     public string RelyingPartyName { get; set; }
+
+    public JsonSerializerOptions JsonOptions { get; set; } = new JsonSerializerOptions
+    {
+        Converters = { new IntArrayJsonConverter(), new EmptyToNullStringConverter() },
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+        PropertyNameCaseInsensitive = true
+    }; // TODO: check handling style in Microsoft.IdentityModel
 }

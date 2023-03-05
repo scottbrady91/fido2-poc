@@ -107,5 +107,6 @@ public class PublicKeyCredentialCreationOptions
     /// Allows the user to identify what authenticators they have registered at the relying party (web server).
     /// Can be set by the user during or after registration.
     /// </summary>
+    [JsonPropertyName("deviceDisplayName")]
     public string DeviceDisplayName { get; set; } // TODO: move to options wrapper?
 }
