@@ -13,6 +13,9 @@ namespace ScottBrady.Fido2.Models;
 /// </remarks>
 public class PublicKeyCredentialDescriptor
 {
+    /// <summary>
+    /// Creates a new PublicKeyCredentialDescriptor using required fields.
+    /// </summary>
     [JsonConstructor]
     public PublicKeyCredentialDescriptor(byte[] id, string type = WebAuthnConstants.PublicKeyCredentialType.PublicKey)
     {
