@@ -1,3 +1,5 @@
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using ScottBrady.Fido2;
@@ -9,7 +11,7 @@ builder.Services.AddWebAuthn(options =>
         options.RelyingPartyId = "localhost";
         options.RelyingPartyName = "SB Test";
     })
-    .AddInMemoryKeyStore();
+    .AddJsonFileKeyStore();
 
 var app = builder.Build();
 
@@ -20,6 +22,8 @@ app.UseStaticFiles();
 
 app.UseWebAuthnApi();
 
-app.MapGet("/fido/keys", () => Results.Json(InMemoryFidoKeyStore.Keys));
+// demo endpoint to view current key store
+app.MapGet("/fido/keys", (JsonFidoKeyStore store) => 
+        Results.Json(store.Keys, new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
 
 app.Run();

@@ -351,3 +351,6 @@ MigrationBackup/
 
 # Jetbrains
 .idea/
+
+# Test data
+samples/ScottBrady.Fido2.Samples.Basic/keys.json

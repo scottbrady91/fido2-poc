@@ -44,4 +44,18 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFidoKeyStore, InMemoryFidoKeyStore>();
         return services;
     }
+
+    /// <summary>
+    /// Registers a JSON file implementation of IFidoKeyStore.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="filePath">The file path. Must have read and write permissions.</param>
+    public static IServiceCollection AddJsonFileKeyStore(this IServiceCollection services, string filePath = "keys.json")
+    {
+        if (string.IsNullOrEmpty(filePath)) throw new ArgumentNullException(nameof(filePath));
+
+        services.AddSingleton(_ => new JsonFidoKeyStore(filePath));
+        services.AddScoped<IFidoKeyStore>(s => s.GetRequiredService<JsonFidoKeyStore>());
+        return services;
+    }
 }
