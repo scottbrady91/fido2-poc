@@ -10,6 +10,7 @@ builder.Services.AddWebAuthn(options =>
     {
         options.RelyingPartyId = "localhost";
         options.RelyingPartyName = "SB Test";
+        options.RelyingPartyOrigin = "https://localhost:5000";
     })
     .AddJsonFileKeyStore();
 

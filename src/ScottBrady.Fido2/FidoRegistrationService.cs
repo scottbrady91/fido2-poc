@@ -40,9 +40,6 @@ public interface IFidoRegistrationService
 /// <inheritdoc />
 public class FidoRegistrationService : IFidoRegistrationService
 {
-    // TODO: make RP origin use HttpContext and/or make configurable
-    private const string RpOrigin = "https://localhost:5000";
-
     private readonly ClientDataParser clientDataParser;
     private readonly AttestationObjectParser attestationObjectParser;
     private readonly IFidoOptionsStore optionsStore;
@@ -89,7 +86,7 @@ public class FidoRegistrationService : IFidoRegistrationService
         
         if (clientData.Type != "webauthn.create") throw new FidoException("Incorrect type - must be webauthn.create");
         if (!challenge.SequenceEqual(options.Challenge)) throw new FidoException("Incorrect challenge value - may be a response for a different request");
-        if (clientData.Origin != RpOrigin) throw new FidoException($"Incorrect origin in clientDataJSON - unexpected value '{clientData.Origin}'");
+        if (clientData.Origin != configurationOptions.RelyingPartyOrigin) throw new FidoException($"Incorrect origin in clientDataJSON - unexpected value '{clientData.Origin}'");
         if (clientData.TokenBinding != null && clientData.TokenBinding.Status == WebAuthnConstants.TokenBindingStatus.Present) throw new FidoException("Unsupported token binding status"); 
         
         var attestationObject = attestationObjectParser.Parse(response.AttestationObject);

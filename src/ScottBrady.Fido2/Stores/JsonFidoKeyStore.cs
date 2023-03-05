@@ -23,6 +23,7 @@ public class JsonFidoKeyStore : IFidoKeyStore
     private static readonly JsonSerializerOptions Options = new JsonSerializerOptions
     {
         WriteIndented = true,
+        PropertyNameCaseInsensitive = true,
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
     private readonly string filePath;
@@ -125,16 +126,16 @@ public class JsonFidoKeyStore : IFidoKeyStore
             LastUsed = key.LastUsed;
         }
         
-        public byte[] UserId { get; }
-        public string Username { get; }
-        public byte[] CredentialId { get; }
-        public string DeviceFriendlyName { get; }
+        public byte[] UserId { get; set; }
+        public string Username { get; set; }
+        public byte[] CredentialId { get; set; }
+        public string DeviceFriendlyName { get; set; }
     
-        public uint Counter { get; }
-        public string KeyAsJson { get; }
+        public uint Counter { get; set; }
+        public string KeyAsJson { get; set; }
 
-        public DateTime? Created { get; }
-        public DateTime? LastUsed { get; }
+        public DateTime? Created { get; set; }
+        public DateTime? LastUsed { get; set; }
 
         public FidoKey ToFidoKey()
         {

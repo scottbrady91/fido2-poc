@@ -38,6 +38,8 @@ public class HappyPathTests
     private const string RelyingPartyId = "localhost";
     private const string Origin = "https://localhost:5000";
 
+    private readonly FidoOptions options = new FidoOptions { RelyingPartyId = RelyingPartyId, RelyingPartyOrigin = Origin };
+
     [Fact]
     public void ClientDataParser_Parse()
     {
@@ -89,7 +91,7 @@ public class HappyPathTests
             new AttestationObjectParser(new AuthenticatorDataParser()),
             optionsStore,
             new InMemoryFidoKeyStore(),
-            new OptionsWrapper<FidoOptions>(new FidoOptions { RelyingPartyId = RelyingPartyId }));
+            new OptionsWrapper<FidoOptions>(options));
         
         await sut.Complete(new PublicKeyCredential
         {
@@ -120,9 +122,9 @@ public class HappyPathTests
 
         var sut = new FidoAuthenticationService(
             optionsStore,
-            new FidoSignatureValidator(new OptionsWrapper<FidoOptions>(new FidoOptions { RelyingPartyId = RelyingPartyId })),
+            new FidoSignatureValidator(new OptionsWrapper<FidoOptions>(options)),
             keyStore,
-            new OptionsWrapper<FidoOptions>(new FidoOptions { RelyingPartyId = RelyingPartyId }));
+            new OptionsWrapper<FidoOptions>(options));
         
         await sut.Complete(new PublicKeyCredential
         {

@@ -115,7 +115,7 @@ public class FidoAuthenticationService : IFidoAuthenticationService
 
         if (clientData.Type != "webauthn.get") throw new FidoException("Incorrect type - must be webauthn.create");
         if (!challenge.SequenceEqual(options.Challenge)) throw new FidoException("Incorrect challenge value - may be a response for a different request");
-        if (clientData.Origin != "https://localhost:5000") throw new FidoException($"Incorrect origin in clientDataJSON - unexpected value '{clientData.Origin}'");
+        if (clientData.Origin != configurationOptions.RelyingPartyOrigin) throw new FidoException($"Incorrect origin in clientDataJSON - unexpected value '{clientData.Origin}'");
         if (clientData.TokenBinding != null && clientData.TokenBinding.Status == WebAuthnConstants.TokenBindingStatus.Present) throw new FidoException("Unsupported token binding status");
 
         var authenticatorData = authenticatorDataParser.Parse(response.AuthenticatorData);

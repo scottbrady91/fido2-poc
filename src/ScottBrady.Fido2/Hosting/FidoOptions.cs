@@ -28,6 +28,14 @@ public class FidoOptions
     /// </summary>
     /// <example>ACME Corp</example>
     public string RelyingPartyName { get; set; }
+    
+    /// <summary>
+    /// The fully qualified origin of the relying party.
+    /// For example: "https://localhost:5000" or "https://www.scottbrady91.com".
+    /// Overrides any internally generated values.
+    /// </summary>
+    /// <value>https://localhost:5000</value>
+    public string RelyingPartyOrigin { get; set; } // TODO: add origin parsing/detection, not just hardcoded
 
     /// <summary>
     /// A dictionary of strategies for WebAuthn signature validation.
