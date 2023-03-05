@@ -71,21 +71,8 @@ public class FidoRegistrationService : IFidoRegistrationService
     {
         // TODO: overrides: timeout, algs (PublicKeyCredentialParameters), excludeCredentials?, extensions (pass though?)
 
-        var options = new PublicKeyCredentialCreationOptions(
-            new PublicKeyCredentialRpEntity(configurationOptions.RelyingPartyName) { Id = configurationOptions.RelyingPartyId },
-            request)
-        {
-            PublicKeyCredentialParameters = new[]
-            {
-                new PublicKeyCredentialParameters { Type = WebAuthnConstants.PublicKeyCredentialType.PublicKey, Algorithm = -7 },
-                new PublicKeyCredentialParameters { Type = WebAuthnConstants.PublicKeyCredentialType.PublicKey, Algorithm = -257 }
-            }
-            // Timeout =
-            // Extensions = 
-        };
-
+        var options = new PublicKeyCredentialCreationOptions(configurationOptions, request);
         await optionsStore.Store(options);
-
         return options;
     }
 

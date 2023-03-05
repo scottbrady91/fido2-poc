@@ -79,15 +79,11 @@ public class HappyPathTests
     public async Task FidoRegistrationService_CompleteRegistration()
     {
         var optionsStore = new InMemoryFidoOptionsStore();
-        await optionsStore.Store(new PublicKeyCredentialCreationOptions
-        {
-            Challenge = RegistrationData.TestChallenge,
-            User = new PublicKeyCredentialUserEntity(RandomNumberGenerator.GetBytes(32), "Scott", "Scott"),
-            PublicKeyCredentialParameters = new[]
-            {
-                new PublicKeyCredentialParameters { Type = WebAuthnConstants.PublicKeyCredentialType.PublicKey, Algorithm = int.Parse(CoseConstants.Algorithms.ES256) }
-            }
-        });
+        await optionsStore.Store(new PublicKeyCredentialCreationOptions(
+            new PublicKeyCredentialRpEntity(RelyingPartyId),
+            new PublicKeyCredentialUserEntity(RandomNumberGenerator.GetBytes(32), "Scott", "Scott"),
+            RegistrationData.TestChallenge,
+            new[] { new PublicKeyCredentialParameters { Type = WebAuthnConstants.PublicKeyCredentialType.PublicKey, Algorithm = int.Parse(CoseConstants.Algorithms.ES256) } }));
 
         var sut = new FidoRegistrationService(
             new ClientDataParser(),

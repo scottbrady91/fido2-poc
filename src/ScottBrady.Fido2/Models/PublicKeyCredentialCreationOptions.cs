@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 
@@ -17,18 +18,19 @@ public class PublicKeyCredentialCreationOptions
     /// <summary>
     /// Create a new PublicKeyCredentialCreationOptions.
     /// </summary>
-    public PublicKeyCredentialCreationOptions() { }
+    public PublicKeyCredentialCreationOptions() { } // TODO: remove parameterless constructor
 
     /// <summary>
     /// Creates a new PublicKeyCredentialCreationOptions from a registration request.
     /// </summary>
-    public PublicKeyCredentialCreationOptions(PublicKeyCredentialRpEntity relyingParty, FidoRegistrationRequest request)
+    public PublicKeyCredentialCreationOptions(FidoOptions options, FidoRegistrationRequest request)
     {
         if (request == null) throw new ArgumentNullException(nameof(request));
-        RelyingParty = relyingParty;
+        RelyingParty = new PublicKeyCredentialRpEntity(options.RelyingPartyName) { Id = options.RelyingPartyId };
         User = new PublicKeyCredentialUserEntity(RandomNumberGenerator.GetBytes(32), request.Username, request.UserDisplayName); // TODO: Same user ID for multiple devices? How does that work again? What about enumeration?
-        Challenge = RandomNumberGenerator.GetBytes(32); // TODO: does challenge generation need to be configurable? If so, set in ctor here.
-        // PublicKeyCredentialParameters = // TODO: set RP and PublicKeyCredentialParameters in ctor via options?
+        Challenge = RandomNumberGenerator.GetBytes(32); // TODO: does challenge generation need to be configurable?s
+        PublicKeyCredentialParameters = options.SigningAlgorithmStrategies.Select(x =>
+            new PublicKeyCredentialParameters { Type = WebAuthnConstants.PublicKeyCredentialType.PublicKey, Algorithm = int.Parse(x.Key) });
         // ExcludeCredentials // TODO: set via user/key object? Should only set when user already identified and identity partially verified to prevent enumeration.
         AuthenticatorSelectionCriteria = request.AuthenticatorSelectionCriteria;
         Attestation = request.AttestationConveyancePreference;

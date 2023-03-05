@@ -31,14 +31,15 @@ public class FidoOptions
 
     /// <summary>
     /// A dictionary of strategies for WebAuthn signature validation.
-    /// Key must be <a href="https://www.iana.org/assignments/cose/cose.xhtml#algorithms">an algorithm in from the COSE standard</a>.
+    /// Key must be <a href="https://www.iana.org/assignments/cose/cose.xhtml#algorithms">an algorithm in from the COSE standard</a> and in order of preference.
     /// See <see cref="CoseConstants.Algorithms"/> constants class for known algorithm values.
     /// </summary>
-    /// <value>Out-of-the-box support for ES256, ES384, ES512, RS256, RS384, and RS512</value>
+    /// <value>Default settings (in order): ES256, ES384, ES512, RS256, RS384, and RS512</value>
     // TODO: how to improve strategy? Leave in options? Copy every time? Move to factory?
     public Dictionary<string, Func<ISignatureValidationStrategy>> SigningAlgorithmStrategies = 
         new Dictionary<string, Func<ISignatureValidationStrategy>>
         {
+            // TODO: EdDSA?
             { CoseConstants.Algorithms.ES256, () => new EcdsaSignatureValidationStrategy() },
             { CoseConstants.Algorithms.ES384, () => new EcdsaSignatureValidationStrategy() },
             { CoseConstants.Algorithms.ES512, () => new EcdsaSignatureValidationStrategy() },
@@ -46,7 +47,6 @@ public class FidoOptions
             { CoseConstants.Algorithms.RS384, () => new RsaSignatureValidationStrategy() },
             { CoseConstants.Algorithms.RS512, () => new RsaSignatureValidationStrategy() }
             // TODO: RS1?
-            // TODO: EdDSA?
         };
 
     public JsonSerializerOptions JsonOptions { get; set; } = new JsonSerializerOptions
