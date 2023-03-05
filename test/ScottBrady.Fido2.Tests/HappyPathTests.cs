@@ -3,6 +3,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using ScottBrady.Fido2.Cryptography;
 using ScottBrady.Fido2.Models;
@@ -12,7 +13,9 @@ using Xunit;
 
 namespace ScottBrady.Fido2.Tests;
 
-// Basic happy path tests using data from Windows Hello
+/// <summary>
+/// Basic happy path tests using data from Windows Hello.
+/// </summary>
 public class HappyPathTests
 {
     private static class RegistrationData
@@ -33,8 +36,10 @@ public class HappyPathTests
         public static readonly byte[] TestUserHandle = Convert.FromBase64String("B+VIZZkOHvvx7DEIcKQDo1pCYqZ6jqSI273+TOpGQow=");
         public static readonly byte[] TestClientDataJson = Convert.FromBase64String("eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiaFRDX0RUTDRJNWNYZ2x3Z2tFQlYtQSIsIm9yaWdpbiI6Imh0dHBzOi8vbG9jYWxob3N0OjUwMDAiLCJjcm9zc09yaWdpbiI6ZmFsc2V9");
     }
-    
-    
+
+    private const string RelyingPartyId = "localhost";
+    private const string Origin = "https://localhost:5000";
+
     [Fact]
     public void ClientDataParser_Parse()
     {
@@ -42,7 +47,7 @@ public class HappyPathTests
         var clientData = sut.Parse(RegistrationData.TestClientDataJson);
 
         clientData.Type.Should().Be("webauthn.create");
-        clientData.Origin.Should().Be("https://localhost:5000");
+        clientData.Origin.Should().Be(Origin);
         clientData.Challenge.Should().Be("V2pRWnLOxb-7Q_Vc5B495Q");
         clientData.CrossOrigin.Should().Be(false);
     }
@@ -79,7 +84,10 @@ public class HappyPathTests
         {
             Challenge = RegistrationData.TestChallenge,
             User = new PublicKeyCredentialUserEntity(RandomNumberGenerator.GetBytes(32), "Scott", "Scott"),
-            PublicKeyCredentialParameters = new[] { new PublicKeyCredentialParameters { Type = "public-key", Algorithm = int.Parse(CoseConstants.Algorithms.ES256) } }
+            PublicKeyCredentialParameters = new[]
+            {
+                new PublicKeyCredentialParameters { Type = WebAuthnConstants.PublicKeyCredentialType.PublicKey, Algorithm = int.Parse(CoseConstants.Algorithms.ES256) }
+            }
         });
 
         var sut = new FidoRegistrationService(
@@ -87,11 +95,11 @@ public class HappyPathTests
             new AttestationObjectParser(new AuthenticatorDataParser()),
             optionsStore,
             new InMemoryFidoKeyStore(),
-            new OptionsWrapper<FidoOptions>(new FidoOptions { RelyingPartyId = "localhost" }));
+            new OptionsWrapper<FidoOptions>(new FidoOptions { RelyingPartyId = RelyingPartyId }));
         
         await sut.Complete(new PublicKeyCredential
         {
-            Type = "public-key",
+            Type = WebAuthnConstants.PublicKeyCredentialType.PublicKey,
             Response = new AuthenticatorAttestationResponse
             {
                 AttestationObject = RegistrationData.TestAttestationObject,
@@ -122,7 +130,7 @@ public class HappyPathTests
         {
             Id = AuthenticationData.TestId,
             RawId = AuthenticationData.TestRawId,
-            Type = "public-key",
+            Type = WebAuthnConstants.PublicKeyCredentialType.PublicKey,
             Response = new AuthenticatorAssertionResponse
             {
                 AuthenticatorData = AuthenticationData.TestAuthenticatorData,

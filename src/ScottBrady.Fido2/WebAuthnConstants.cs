@@ -6,6 +6,18 @@
 public static class WebAuthnConstants
 {
     /// <summary>
+    /// Valid credential types.
+    /// Values from <a href="https://www.w3.org/TR/webauthn-2/#enum-credentialType">PublicKeyCredentialType</a>.
+    /// </summary>
+    public static class PublicKeyCredentialType
+    {
+        /// <summary>
+        /// A WebAuthn public key.
+        /// </summary>
+        public const string PublicKey = "public-key";
+    }
+    
+    /// <summary>
     /// Known transports the client (WebAuthn API) can use to communicate with an authenticator.
     /// Values from <a href="https://www.w3.org/TR/webauthn-2/#enum-transport">Authenticator Transport Enumeration</a>.
     /// </summary>

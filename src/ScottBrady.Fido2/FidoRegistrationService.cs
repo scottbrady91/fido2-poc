@@ -46,8 +46,8 @@ public class FidoRegistrationService
         {
             PublicKeyCredentialParameters = new[]
             {
-                new PublicKeyCredentialParameters { Type = "public-key", Algorithm = -7 },
-                new PublicKeyCredentialParameters { Type = "public-key", Algorithm = -257 }
+                new PublicKeyCredentialParameters { Type = WebAuthnConstants.PublicKeyCredentialType.PublicKey, Algorithm = -7 },
+                new PublicKeyCredentialParameters { Type = WebAuthnConstants.PublicKeyCredentialType.PublicKey, Algorithm = -257 }
             }
             // Timeout =
             // Extensions = 

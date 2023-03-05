@@ -14,7 +14,7 @@ namespace ScottBrady.Fido2.Models;
 public class PublicKeyCredentialDescriptor
 {
     [JsonConstructor]
-    public PublicKeyCredentialDescriptor(byte[] id, string type = "public-key")
+    public PublicKeyCredentialDescriptor(byte[] id, string type = WebAuthnConstants.PublicKeyCredentialType.PublicKey)
     {
         Id = id ?? throw new ArgumentNullException(nameof(id));
         Type = type ?? throw new ArgumentNullException(nameof(type));
