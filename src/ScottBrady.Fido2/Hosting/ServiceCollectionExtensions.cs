@@ -19,9 +19,9 @@ public static class ServiceCollectionExtensions
     {
         services.Configure(configureOptions);
 
-        services.AddScoped<ClientDataParser>();
-        services.AddScoped<AttestationObjectParser>();
-        services.AddScoped<AuthenticatorDataParser>();
+        services.AddScoped<IClientDataParser, ClientDataParser>();
+        services.AddScoped<IAttestationObjectParser, AttestationObjectParser>();
+        services.AddScoped<IAuthenticatorDataParser, AuthenticatorDataParser>();
         
         services.AddScoped<IFidoSignatureValidator, FidoSignatureValidator>();
         

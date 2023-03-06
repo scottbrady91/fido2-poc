@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
+using ScottBrady.Fido2.Stores;
 
 namespace ScottBrady.Fido2.Models;
 
@@ -23,15 +24,21 @@ public class PublicKeyCredentialCreationOptions
     /// <summary>
     /// Creates a new PublicKeyCredentialCreationOptions from a registration request.
     /// </summary>
-    public PublicKeyCredentialCreationOptions(FidoOptions options, FidoRegistrationRequest request)
+    public PublicKeyCredentialCreationOptions(FidoOptions options, FidoRegistrationRequest request, IList<FidoKey> existingKeysForUser)
     {
         if (request == null) throw new ArgumentNullException(nameof(request));
+        
         RelyingParty = new PublicKeyCredentialRpEntity(options.RelyingPartyName) { Id = options.RelyingPartyId };
-        User = new PublicKeyCredentialUserEntity(RandomNumberGenerator.GetBytes(32), request.Username, request.UserDisplayName); // TODO: Same user ID for multiple devices? How does that work again? What about enumeration?
+
+        var userHandle = existingKeysForUser.FirstOrDefault()?.UserId ?? RandomNumberGenerator.GetBytes(32); 
+        User = new PublicKeyCredentialUserEntity(userHandle, request.Username, request.UserDisplayName);
+        
         Challenge = RandomNumberGenerator.GetBytes(32); // TODO: does challenge generation need to be configurable?s
         PublicKeyCredentialParameters = options.SigningAlgorithmStrategies.Select(x =>
             new PublicKeyCredentialParameters { Type = WebAuthnConstants.PublicKeyCredentialType.PublicKey, Algorithm = int.Parse(x.Key) });
-        // ExcludeCredentials // TODO: set via user/key object? Should only set when user already identified and identity partially verified to prevent enumeration.
+
+        ExcludeCredentials = existingKeysForUser.Select(x => new PublicKeyCredentialDescriptor(x.CredentialId)).ToList();
+        
         AuthenticatorSelectionCriteria = request.AuthenticatorSelectionCriteria;
         Attestation = request.AttestationConveyancePreference;
         DeviceDisplayName = request.DeviceDisplayName;

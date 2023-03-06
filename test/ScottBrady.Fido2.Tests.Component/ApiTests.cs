@@ -63,10 +63,12 @@ public class ApiTests
     [Fact]
     public async Task Register_Options()
     {
+        const string username = "new-user";
+        
         using var client = CreateTestHost();
         
-        // {"username":"Scott","authenticatorSelection":{"authenticatorAttachment":"","userVerification":"","attestation":"none"}}
-        var optionsResponse = await client.PutAsJsonAsync("/fido/register", new FidoRegistrationRequest(Username), jsonSerializerOptions);
+        // {"username":"new-user","authenticatorSelection":{"authenticatorAttachment":"","userVerification":"","attestation":"none"}}
+        var optionsResponse = await client.PutAsJsonAsync("/fido/register", new FidoRegistrationRequest(username), jsonSerializerOptions);
         optionsResponse.IsSuccessStatusCode.Should().BeTrue();
 
         // Example:
@@ -81,8 +83,8 @@ public class ApiTests
         creationOptions.RelyingParty.Id.Should().Be(RelyingPartyId);
         creationOptions.RelyingParty.Name.Should().Be(RelyingPartyName);
         creationOptions.User.Id.Should().NotBeEmpty();
-        creationOptions.User.Name.Should().Be(Username);
-        creationOptions.User.DisplayName.Should().Be(Username);
+        creationOptions.User.Name.Should().Be(username);
+        creationOptions.User.DisplayName.Should().Be(username);
         creationOptions.Challenge.Should().NotBeEmpty();
         creationOptions.PublicKeyCredentialParameters.Any(x => x.Algorithm.ToString() == CoseConstants.Algorithms.ES256).Should().BeTrue();
         creationOptions.PublicKeyCredentialParameters.Any(x => x.Algorithm.ToString() == CoseConstants.Algorithms.RS256).Should().BeTrue();

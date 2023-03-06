@@ -8,8 +8,22 @@ using ScottBrady.Fido2.Models;
 
 namespace ScottBrady.Fido2.Parsers;
 
-public class AuthenticatorDataParser
+/// <summary>
+/// Parses authenticator data from authenticatorData bytes.
+/// </summary>
+public interface IAuthenticatorDataParser
 {
+    /// <summary>
+    /// Parses authenticator data from authenticatorData bytes.
+    /// </summary>
+    /// <param name="authenticatorData">authenticatorData as original bytes.</param>
+    AuthenticatorData Parse(ReadOnlySpan<byte> authenticatorData);
+}
+
+/// <inheritdoc />
+public class AuthenticatorDataParser : IAuthenticatorDataParser
+{
+    /// <inheritdoc />
     public AuthenticatorData Parse(ReadOnlySpan<byte> authenticatorData)
     {
         var parsedData = new AuthenticatorData();

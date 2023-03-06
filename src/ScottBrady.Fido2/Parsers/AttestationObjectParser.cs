@@ -5,15 +5,32 @@ using ScottBrady.Fido2.Models;
 
 namespace ScottBrady.Fido2.Parsers;
 
-public class AttestationObjectParser
+/// <summary>
+/// Parses an attestation object from attestationObject bytes.
+/// </summary>
+public interface IAttestationObjectParser
 {
-    private readonly AuthenticatorDataParser authenticatorDataParser;
+    /// <summary>
+    /// Parses an attestation object from attestationObject bytes.
+    /// </summary>
+    /// <param name="attestationObject">attestationObject as original bytes.</param>
+    AttestationObject Parse(ReadOnlySpan<byte> attestationObject);
+}
 
-    public AttestationObjectParser(AuthenticatorDataParser authenticatorDataParser)
+/// <inheritdoc />
+public class AttestationObjectParser : IAttestationObjectParser
+{
+    private readonly IAuthenticatorDataParser authenticatorDataParser;
+
+    /// <summary>
+    /// Creates a new AttestationObjectParser.
+    /// </summary>
+    public AttestationObjectParser(IAuthenticatorDataParser authenticatorDataParser)
     {
         this.authenticatorDataParser = authenticatorDataParser ?? throw new ArgumentNullException(nameof(authenticatorDataParser));
     }
-    
+
+    /// <inheritdoc />
     public AttestationObject Parse(ReadOnlySpan<byte> attestationObject)
     {
         // TODO: guards (inc. length checks, CBOR error)

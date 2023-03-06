@@ -40,8 +40,8 @@ public interface IFidoRegistrationService
 /// <inheritdoc />
 public class FidoRegistrationService : IFidoRegistrationService
 {
-    private readonly ClientDataParser clientDataParser;
-    private readonly AttestationObjectParser attestationObjectParser;
+    private readonly IClientDataParser clientDataParser;
+    private readonly IAttestationObjectParser attestationObjectParser;
     private readonly IFidoOptionsStore optionsStore;
     private readonly IFidoKeyStore keyStore;
     private readonly FidoOptions configurationOptions;
@@ -50,8 +50,8 @@ public class FidoRegistrationService : IFidoRegistrationService
     /// Creates a new <see cref="FidoRegistrationService"/>.
     /// </summary>
     public FidoRegistrationService(
-        ClientDataParser clientDataParser,
-        AttestationObjectParser attestationObjectParser,
+        IClientDataParser clientDataParser,
+        IAttestationObjectParser attestationObjectParser,
         IFidoOptionsStore optionsStore,
         IFidoKeyStore keyStore,
         IOptions<FidoOptions> configurationOptions)
@@ -67,8 +67,9 @@ public class FidoRegistrationService : IFidoRegistrationService
     public async Task<PublicKeyCredentialCreationOptions> Initiate(FidoRegistrationRequest request)
     {
         // TODO: overrides: timeout, algs (PublicKeyCredentialParameters), excludeCredentials?, extensions (pass though?)
-
-        var options = new PublicKeyCredentialCreationOptions(configurationOptions, request);
+        
+        var existingKeysForUser = await keyStore.GetByUsername(request.Username);
+        var options = new PublicKeyCredentialCreationOptions(configurationOptions, request, existingKeysForUser.ToList());
         await optionsStore.Store(options);
         return options;
     }

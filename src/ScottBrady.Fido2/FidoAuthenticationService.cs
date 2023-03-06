@@ -41,12 +41,10 @@ public interface IFidoAuthenticationService
 /// <inheritdoc />
 public class FidoAuthenticationService : IFidoAuthenticationService
 {
-    private const string RpId = "localhost";
-    private readonly IClientDataParser clientDataParser = new ClientDataParser();
-    private readonly AuthenticatorDataParser authenticatorDataParser = new AuthenticatorDataParser();
-    
-    private readonly IFidoOptionsStore optionsStore;
+    private readonly IClientDataParser clientDataParser;
+    private readonly IAuthenticatorDataParser authenticatorDataParser;
     private readonly IFidoSignatureValidator signatureValidator;
+    private readonly IFidoOptionsStore optionsStore;
     private readonly IFidoKeyStore keyStore;
     private readonly FidoOptions configurationOptions;
     
@@ -54,13 +52,17 @@ public class FidoAuthenticationService : IFidoAuthenticationService
     /// Creates a new <see cref="FidoAuthenticationService"/>.
     /// </summary>
     public FidoAuthenticationService(
-        IFidoOptionsStore optionsStore,
+        IClientDataParser clientDataParser,
+        IAuthenticatorDataParser authenticatorDataParser,
         IFidoSignatureValidator signatureValidator,
+        IFidoOptionsStore optionsStore,
         IFidoKeyStore keyStore,
         IOptions<FidoOptions> configurationOptions)
     {
-        this.optionsStore = optionsStore ?? throw new ArgumentNullException(nameof(optionsStore));
+        this.clientDataParser = clientDataParser ?? throw new ArgumentNullException(nameof(clientDataParser));
+        this.authenticatorDataParser = authenticatorDataParser ?? throw new ArgumentNullException(nameof(authenticatorDataParser));
         this.signatureValidator = signatureValidator ?? throw new ArgumentNullException(nameof(signatureValidator));
+        this.optionsStore = optionsStore ?? throw new ArgumentNullException(nameof(optionsStore));
         this.keyStore = keyStore ?? throw new ArgumentNullException(nameof(keyStore));
         this.configurationOptions = configurationOptions?.Value ?? throw new ArgumentNullException(nameof(configurationOptions));
     }
@@ -69,13 +71,14 @@ public class FidoAuthenticationService : IFidoAuthenticationService
     /// <inheritdoc />
     public async Task<PublicKeyCredentialRequestOptions> Initiate(FidoAuthenticationRequest request)
     {
-        // TODO: how to handle requests by user ID?
+        if (request == null) throw new ArgumentNullException(nameof(request));
+        
         var keys = await keyStore.GetByUsername(request.Username);
-        if (keys == null) throw new FidoException("Unknown user"); // TODO: return enumeration resistant response?
+        if (keys == null) throw new FidoException("Unknown user"); // TODO (passwordless): return enumeration resistant options & response
 
         var options = new PublicKeyCredentialRequestOptions(RandomNumberGenerator.GetBytes(32))
         {
-            RpId = RpId,
+            RpId = configurationOptions.RelyingPartyId,
             AllowCredentials = keys.Select(x => new PublicKeyCredentialDescriptor(x.CredentialId)).ToList(),
             UserVerification = request.UserVerification ?? WebAuthnConstants.UserVerificationRequirement.Preferred,
             // extensions
@@ -96,23 +99,21 @@ public class FidoAuthenticationService : IFidoAuthenticationService
         var challenge = Base64UrlEncoder.DecodeBytes(clientData.Challenge);
         var options = await optionsStore.TakeAuthenticationOptions(challenge);
         if (options == null) throw new FidoException("Unable to find stored options for request - unsolicited PublicKeyCredential");
-        
-        if (options.AllowCredentials?.Any() == true)
-        {
-            if (options.AllowCredentials.All(x => !x.Id.SequenceEqual(credential.RawId)))
-                throw new FidoException("Incorrect credential used - ID not present in requested credential list (allowCredentials)");
-        }
+
+        // TODO (passwordless): make allowCredentials optional
+        if (options.AllowCredentials.All(x => !x.Id.SequenceEqual(credential.RawId)))
+            throw new FidoException("Incorrect credential used - ID not present in requested credential list (allowCredentials)");
         
         var key = await keyStore.GetByCredentialId(credential.RawId);
         if (key == null) throw new FidoException("Unknown key - there is no key stored with this credential ID");
 
-        // TODO: also validate against user identified (requires wrapper around options for username/user handle
-        if (response.UserHandle != null && !response.UserHandle.SequenceEqual(key.UserId)) throw new FidoException("Used key does not belong to this user (mismatch in user handle)");
+        // user handle only necessary when doing username-less
+        // TODO (passwordless): enforce presence of user handle
+        if (response.UserHandle != null 
+            && response.UserHandle.Length != 0 
+            && !response.UserHandle.SequenceEqual(key.UserId))
+            throw new FidoException("Used key does not belong to this user (mismatch in user handle)");
         
-        // TODO: verify user handle
-        // known during auth: confirm owner of key
-        // unknown during auth: confirm present and owner of key
-
         if (clientData.Type != "webauthn.get") throw new FidoException("Incorrect type - must be webauthn.create");
         if (!challenge.SequenceEqual(options.Challenge)) throw new FidoException("Incorrect challenge value - may be a response for a different request");
         if (clientData.Origin != configurationOptions.RelyingPartyOrigin) throw new FidoException($"Incorrect origin in clientDataJSON - unexpected value '{clientData.Origin}'");
@@ -133,6 +134,7 @@ public class FidoAuthenticationService : IFidoAuthenticationService
         var isValidSignature = await signatureValidator.HasValidSignature(response, key.CredentialPublicKey);
         if (!isValidSignature) throw new FidoException("Invalid signature");
 
+        if (authenticatorData.SignCount <= key.Counter) throw new FidoException("SignCount is less than or equal to stored counter for key - authenticator may have been cloned");
         await keyStore.UpdateCounter(key.CredentialId, authenticatorData.SignCount);
 
         return FidoAuthenticationResult.Success(key, authenticatorData);
