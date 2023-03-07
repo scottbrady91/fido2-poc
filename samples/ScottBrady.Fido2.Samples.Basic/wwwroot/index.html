@@ -66,6 +66,11 @@
         let options = await response.json();
         options.challenge = new Uint8Array(options.challenge);
         options.user.id = new Uint8Array(options.user.id);
+        if (options.excludeCredentials != null) {
+            for (const credential of options.excludeCredentials) {
+                credential.id = new Uint8Array(credential.id)
+            }
+        }
         console.log(options);
 
         // create new credential
@@ -123,8 +128,10 @@
         // cleanup options (convert Arrays into Uint8Arrays)
         let options = await response.json();
         options.challenge = new Uint8Array(options.challenge);
-        for (const allowCredential of options.allowCredentials) {
-            allowCredential.id = new Uint8Array(allowCredential.id)
+        if (options.allowCredentials != null) {
+            for (const credential of options.allowCredentials) {
+                credential.id = new Uint8Array(credential.id)
+            }
         }
         console.log(options);
 

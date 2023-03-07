@@ -33,8 +33,6 @@ public class AttestationObjectParser : IAttestationObjectParser
     /// <inheritdoc />
     public AttestationObject Parse(ReadOnlySpan<byte> attestationObject)
     {
-        // TODO: guards (inc. length checks, CBOR error)
-
         CBORObject cbor;
         using (var ms = new MemoryStream(attestationObject.ToArray()))
         {

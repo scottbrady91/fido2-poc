@@ -13,7 +13,7 @@ namespace ScottBrady.Fido2;
 /// </summary>
 public static class WebApplicationExtensions
 {
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions // TODO: use FidoOptions JSON settings.
     {
         Converters = { new IntArrayJsonConverter(), new EmptyToNullStringConverter() },
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,

@@ -57,6 +57,9 @@ public class FidoOptions
             // TODO: RS1?
         };
 
+    /// <summary>
+    /// The <see cref="JsonSerializerOptions"/> used to parse requests and responses to the library.
+    /// </summary>
     public JsonSerializerOptions JsonOptions { get; set; } = new JsonSerializerOptions
     {
         Converters = { new IntArrayJsonConverter(), new EmptyToNullStringConverter() },
