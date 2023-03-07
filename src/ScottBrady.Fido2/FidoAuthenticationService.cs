@@ -72,9 +72,9 @@ public class FidoAuthenticationService : IFidoAuthenticationService
     public async Task<PublicKeyCredentialRequestOptions> Initiate(FidoAuthenticationRequest request)
     {
         if (request == null) throw new ArgumentNullException(nameof(request));
-        
-        var keys = await keyStore.GetByUsername(request.Username);
-        if (keys == null) throw new FidoException("Unknown user"); // TODO (passwordless): return enumeration resistant options & response
+
+        var keys = (await keyStore.GetByUsername(request.Username)).ToList();
+        if (keys == null || !keys.Any()) throw new FidoException("Unknown user"); // TODO (passwordless): return enumeration resistant options & response
 
         var options = new PublicKeyCredentialRequestOptions(RandomNumberGenerator.GetBytes(32))
         {

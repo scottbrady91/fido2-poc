@@ -31,7 +31,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFidoOptionsStore, InMemoryFidoOptionsStore>();
         
         services.AddScoped<IFidoAuthenticationService, FidoAuthenticationService>();
-        services.AddScoped<FidoRegistrationService>();
+        services.AddScoped<IFidoRegistrationService, FidoRegistrationService>();
 
         return services;
     }

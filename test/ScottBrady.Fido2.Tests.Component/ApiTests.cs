@@ -159,10 +159,24 @@ public class ApiTests
     [Fact]
     public async Task Authenticate_Options()
     {
+        const string username = "bob@example.com";
+        var credentialId = RandomNumberGenerator.GetBytes(32);
+        
+        InMemoryFidoKeyStore.Keys.Add(new FidoKey
+        {
+            UserId = RandomNumberGenerator.GetBytes(16),
+            Username = username,
+            CredentialId = credentialId,
+            Counter = 0,
+            Created = DateTime.UtcNow.AddDays(-30), 
+            LastUsed = DateTime.UtcNow.AddDays(-30),
+            DeviceFriendlyName = "laptop"
+        });
+        
         using var client = CreateTestHost();
         
         // {"username":"Scott","authenticatorSelection":{"authenticatorAttachment":"","userVerification":"","attestation":"none"}}
-        var optionsResponse = await client.PutAsJsonAsync("/fido/authenticate", new FidoAuthenticationRequest("a new user"), jsonSerializerOptions);
+        var optionsResponse = await client.PutAsJsonAsync("/fido/authenticate", new FidoAuthenticationRequest(username), jsonSerializerOptions);
         optionsResponse.IsSuccessStatusCode.Should().BeTrue();
 
         // Example:
@@ -176,7 +190,7 @@ public class ApiTests
         var creationOptions = await optionsResponse.Content.ReadFromJsonAsync<PublicKeyCredentialRequestOptions>(jsonSerializerOptions);
         creationOptions.RpId.Should().Be(RelyingPartyId);
         creationOptions.Challenge.Should().NotBeEmpty();
-        creationOptions.AllowCredentials.Should().BeEmpty();
+        creationOptions.AllowCredentials.Should().Contain(x => x.Id.SequenceEqual(credentialId));
         creationOptions.UserVerification.Should().Be(WebAuthnConstants.UserVerificationRequirement.Preferred);
         creationOptions.Timeout.Should().BeNull();
         creationOptions.Extensions.Should().BeNull();

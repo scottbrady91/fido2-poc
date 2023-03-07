@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -18,7 +19,28 @@ public static class WebApplicationExtensions
     /// </summary>
     public static WebApplication UseWebAuthnApi(this WebApplication app)
     {
-        app.MapPut("/fido/register", async (HttpContext context, ILogger<FidoRegistrationService> logger, FidoRegistrationService registrationService, IOptions<FidoOptions> configurationOptions) =>
+        app.MapPut("/fido/register", (HttpContext context, ILogger<IFidoRegistrationService> logger, IFidoRegistrationService registrationService, IOptions<FidoOptions> configurationOptions)
+            => WebAuthnMinimalApiHandlers.InitiateRegistration(context, logger, registrationService, configurationOptions));
+
+        app.MapPost("/fido/register", (HttpContext context, ILogger<IFidoRegistrationService> logger, IFidoRegistrationService registrationService, IOptions<FidoOptions> configurationOptions)
+            => WebAuthnMinimalApiHandlers.CompleteRegistration(context, logger, registrationService, configurationOptions));
+
+        app.MapPut("/fido/authenticate", (HttpContext context, ILogger<IFidoAuthenticationService> logger, IFidoAuthenticationService authenticationService, IOptions<FidoOptions> configurationOptions) 
+            => WebAuthnMinimalApiHandlers.InitiateAuthentication(context, logger, authenticationService, configurationOptions));
+
+        app.MapPost("/fido/authenticate", (HttpContext context, ILogger<IFidoAuthenticationService> logger, IFidoAuthenticationService authenticationService, IOptions<FidoOptions> configurationOptions)
+            => WebAuthnMinimalApiHandlers.CompleteAuthentication(context, logger, authenticationService, configurationOptions));
+
+        return app;
+    }
+
+    private static class WebAuthnMinimalApiHandlers
+    {
+        public static async Task<IResult> InitiateRegistration(
+            HttpContext context,
+            ILogger logger,
+            IFidoRegistrationService registrationService,
+            IOptions<FidoOptions> configurationOptions)
         {
             try
             {
@@ -31,9 +53,13 @@ public static class WebApplicationExtensions
                 logger.LogError(e, "Failed to generate FIDO registration options");
                 return Results.BadRequest();
             }
-        });
+        }
 
-        app.MapPost("/fido/register", async (HttpContext context, ILogger<FidoRegistrationService> logger, FidoRegistrationService registrationService, IOptions<FidoOptions> configurationOptions) =>
+        public static async Task<IResult> CompleteRegistration(
+            HttpContext context,
+            ILogger logger,
+            IFidoRegistrationService registrationService,
+            IOptions<FidoOptions> configurationOptions)
         {
             try
             {
@@ -45,10 +71,13 @@ public static class WebApplicationExtensions
             {
                 logger.LogError(e, "Failed to register FIDO credentials");
                 return Results.BadRequest();
-            }
-        });
-
-        app.MapPut("/fido/authenticate", async (HttpContext context, ILogger<FidoRegistrationService> logger, IFidoAuthenticationService authenticationService, IOptions<FidoOptions> configurationOptions) =>
+            }   
+        }
+        public static async Task<IResult> InitiateAuthentication(
+            HttpContext context,
+            ILogger logger,
+            IFidoAuthenticationService authenticationService,
+            IOptions<FidoOptions> configurationOptions)
         {
             try
             {
@@ -61,9 +90,13 @@ public static class WebApplicationExtensions
                 logger.LogError(e, "Failed to generate FIDO authentication options");
                 return Results.BadRequest();
             }
-        });
+        }
 
-        app.MapPost("/fido/authenticate", async (HttpContext context, ILogger<FidoRegistrationService> logger, IFidoAuthenticationService authenticationService, IOptions<FidoOptions> configurationOptions) =>
+        public static async Task<IResult> CompleteAuthentication(
+            HttpContext context,
+            ILogger logger,
+            IFidoAuthenticationService authenticationService,
+            IOptions<FidoOptions> configurationOptions)
         {
             try
             {
@@ -76,8 +109,6 @@ public static class WebApplicationExtensions
                 logger.LogError(e, "Failed to authenticate FIDO credentials");
                 return Results.BadRequest();
             }
-        });
-
-        return app;
+        }
     }
 }
