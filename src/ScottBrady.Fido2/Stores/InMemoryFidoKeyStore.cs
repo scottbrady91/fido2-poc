@@ -50,7 +50,6 @@ public class InMemoryFidoKeyStore : IFidoKeyStore
         
         lock (Keys)
         {
-            // TODO: system clock? (JSON store too)
             key.Created = DateTime.UtcNow;
             key.LastUsed = DateTime.UtcNow;
 

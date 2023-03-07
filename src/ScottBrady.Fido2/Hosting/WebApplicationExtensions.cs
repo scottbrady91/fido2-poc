@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using ScottBrady.Fido2.Models;
 
 namespace ScottBrady.Fido2;
@@ -13,25 +13,18 @@ namespace ScottBrady.Fido2;
 /// </summary>
 public static class WebApplicationExtensions
 {
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions // TODO: use FidoOptions JSON settings.
-    {
-        Converters = { new IntArrayJsonConverter(), new EmptyToNullStringConverter() },
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-        PropertyNameCaseInsensitive = true
-    };
-    
     /// <summary>
     /// Registers the API endpoints to act as a WebAuthn relying party.
     /// </summary>
     public static WebApplication UseWebAuthnApi(this WebApplication app)
     {
-        app.MapPut("/fido/register", async (HttpContext context, ILogger<FidoRegistrationService> logger, FidoRegistrationService registrationService) =>
+        app.MapPut("/fido/register", async (HttpContext context, ILogger<FidoRegistrationService> logger, FidoRegistrationService registrationService, IOptions<FidoOptions> configurationOptions) =>
         {
             try
             {
-                var request = await JsonSerializer.DeserializeAsync<FidoRegistrationRequest>(context.Request.Body, JsonSerializerOptions);
+                var request = await JsonSerializer.DeserializeAsync<FidoRegistrationRequest>(context.Request.Body, configurationOptions.Value.JsonSerializerOptions);
                 var options = await registrationService.Initiate(request);
-                return Results.Json(options, JsonSerializerOptions, statusCode: 200);
+                return Results.Json(options, configurationOptions.Value.JsonSerializerOptions, statusCode: 200);
             }
             catch (Exception e)
             {
@@ -40,11 +33,11 @@ public static class WebApplicationExtensions
             }
         });
 
-        app.MapPost("/fido/register", async (HttpContext context, ILogger<FidoRegistrationService> logger, FidoRegistrationService registrationService) =>
+        app.MapPost("/fido/register", async (HttpContext context, ILogger<FidoRegistrationService> logger, FidoRegistrationService registrationService, IOptions<FidoOptions> configurationOptions) =>
         {
             try
             {
-                var credential = await JsonSerializer.DeserializeAsync<PublicKeyCredential>(context.Request.Body, JsonSerializerOptions);
+                var credential = await JsonSerializer.DeserializeAsync<PublicKeyCredential>(context.Request.Body, configurationOptions.Value.JsonSerializerOptions);
                 var result = await registrationService.Complete(credential);
                 return result.IsSuccess ? Results.Json(result) : Results.BadRequest();
             }
@@ -55,13 +48,13 @@ public static class WebApplicationExtensions
             }
         });
 
-        app.MapPut("/fido/authenticate", async (HttpContext context, ILogger<FidoRegistrationService> logger, IFidoAuthenticationService authenticationService) =>
+        app.MapPut("/fido/authenticate", async (HttpContext context, ILogger<FidoRegistrationService> logger, IFidoAuthenticationService authenticationService, IOptions<FidoOptions> configurationOptions) =>
         {
             try
             {
-                var request = await JsonSerializer.DeserializeAsync<FidoAuthenticationRequest>(context.Request.Body, JsonSerializerOptions);
+                var request = await JsonSerializer.DeserializeAsync<FidoAuthenticationRequest>(context.Request.Body, configurationOptions.Value.JsonSerializerOptions);
                 var options = await authenticationService.Initiate(request);
-                return Results.Json(options, JsonSerializerOptions, statusCode: 200);
+                return Results.Json(options, configurationOptions.Value.JsonSerializerOptions, statusCode: 200);
             }
             catch (Exception e)
             {
@@ -70,11 +63,11 @@ public static class WebApplicationExtensions
             }
         });
 
-        app.MapPost("/fido/authenticate", async (HttpContext context, ILogger<FidoRegistrationService> logger, IFidoAuthenticationService authenticationService) =>
+        app.MapPost("/fido/authenticate", async (HttpContext context, ILogger<FidoRegistrationService> logger, IFidoAuthenticationService authenticationService, IOptions<FidoOptions> configurationOptions) =>
         {
             try
             {
-                var credential = await JsonSerializer.DeserializeAsync<PublicKeyCredential>(context.Request.Body, JsonSerializerOptions);
+                var credential = await JsonSerializer.DeserializeAsync<PublicKeyCredential>(context.Request.Body, configurationOptions.Value.JsonSerializerOptions);
                 var result = await authenticationService.Complete(credential);
                 return result.IsSuccess ? Results.Json(result) : Results.BadRequest();
             }

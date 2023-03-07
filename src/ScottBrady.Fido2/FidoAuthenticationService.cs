@@ -100,7 +100,7 @@ public class FidoAuthenticationService : IFidoAuthenticationService
         var options = await optionsStore.TakeAuthenticationOptions(challenge);
         if (options == null) throw new FidoException("Unable to find stored options for request - unsolicited PublicKeyCredential");
 
-        // TODO (passwordless): make allowCredentials optional
+        // TODO (usernameless): make allowCredentials optional
         if (options.AllowCredentials.All(x => !x.Id.SequenceEqual(credential.RawId)))
             throw new FidoException("Incorrect credential used - ID not present in requested credential list (allowCredentials)");
         
@@ -108,7 +108,7 @@ public class FidoAuthenticationService : IFidoAuthenticationService
         if (key == null) throw new FidoException("Unknown key - there is no key stored with this credential ID");
 
         // user handle only necessary when doing username-less
-        // TODO (passwordless): enforce presence of user handle
+        // TODO (usernameless): enforce presence of user handle
         if (response.UserHandle != null 
             && response.UserHandle.Length != 0 
             && !response.UserHandle.SequenceEqual(key.UserId))

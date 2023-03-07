@@ -58,9 +58,9 @@ public class FidoOptions
         };
 
     /// <summary>
-    /// The <see cref="JsonSerializerOptions"/> used to parse requests and responses to the library.
+    /// The <see cref="System.Text.Json.JsonSerializerOptions"/> used to parse requests and responses to the library.
     /// </summary>
-    public JsonSerializerOptions JsonOptions { get; set; } = new JsonSerializerOptions
+    public JsonSerializerOptions JsonSerializerOptions { get; set; } = new JsonSerializerOptions
     {
         Converters = { new IntArrayJsonConverter(), new EmptyToNullStringConverter() },
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,

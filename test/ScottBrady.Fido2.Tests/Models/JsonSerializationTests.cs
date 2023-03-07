@@ -25,7 +25,7 @@ public class JsonSerializationTests
     [InlineData(typeof(PublicKeyCredentialDescriptor))]
     public void ExpectSerializableWithLowerCaseProperties(Type type)
     {
-        var jsonOptions = new FidoOptions().JsonOptions;
+        var jsonOptions = new FidoOptions().JsonSerializerOptions;
 
         var fixture = new Fixture();
         var model = fixture.Create(type, new SpecimenContext(fixture));
