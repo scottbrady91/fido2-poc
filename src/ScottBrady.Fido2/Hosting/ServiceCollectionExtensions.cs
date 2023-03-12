@@ -22,7 +22,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IClientDataParser, ClientDataParser>();
         services.AddScoped<IAttestationObjectParser, AttestationObjectParser>();
         services.AddScoped<IAuthenticatorDataParser, AuthenticatorDataParser>();
-        
+
+        services.AddScoped<IAttestationStatementValidator, DefaultAttestationStatementValidator>();
         services.AddScoped<IFidoSignatureValidator, FidoSignatureValidator>();
         
         

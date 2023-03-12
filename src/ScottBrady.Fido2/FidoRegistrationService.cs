@@ -42,6 +42,7 @@ public class FidoRegistrationService : IFidoRegistrationService
 {
     private readonly IClientDataParser clientDataParser;
     private readonly IAttestationObjectParser attestationObjectParser;
+    private readonly IAttestationStatementValidator attestationStatementValidator;
     private readonly IFidoOptionsStore optionsStore;
     private readonly IFidoKeyStore keyStore;
     private readonly FidoOptions configurationOptions;
@@ -52,12 +53,14 @@ public class FidoRegistrationService : IFidoRegistrationService
     public FidoRegistrationService(
         IClientDataParser clientDataParser,
         IAttestationObjectParser attestationObjectParser,
+        IAttestationStatementValidator attestationStatementValidator,
         IFidoOptionsStore optionsStore,
         IFidoKeyStore keyStore,
         IOptions<FidoOptions> configurationOptions)
     {
         this.clientDataParser = clientDataParser ?? throw new ArgumentNullException(nameof(clientDataParser));
         this.attestationObjectParser = attestationObjectParser ?? throw new ArgumentNullException(nameof(attestationObjectParser));
+        this.attestationStatementValidator = attestationStatementValidator ?? throw new ArgumentNullException(nameof(attestationStatementValidator));
         this.optionsStore = optionsStore ?? throw new ArgumentNullException(nameof(optionsStore));
         this.keyStore = keyStore ?? throw new ArgumentNullException(nameof(keyStore));
         this.configurationOptions = configurationOptions?.Value ?? throw new ArgumentNullException(nameof(configurationOptions));
@@ -91,8 +94,7 @@ public class FidoRegistrationService : IFidoRegistrationService
         if (clientData.TokenBinding != null && clientData.TokenBinding.Status == WebAuthnConstants.TokenBindingStatus.Present) throw new FidoException("Unsupported token binding status"); 
         
         var attestationObject = attestationObjectParser.Parse(response.AttestationObject);
-        if (attestationObject.StatementFormat != "none") throw new FidoException("Incorrect statement format - only 'none' is supported");
-        if (attestationObject.Statement.Length != 1) throw new FidoException("Incorrect statement count - 'none' format expects 0 statements");
+        if (!attestationStatementValidator.IsValid(attestationObject)) throw new FidoException("Failed attestation statement validation"); 
         
         // var clientDataHash = SHA256.HashData(clientDataJson); // used for attestation statement validation
         // TODO: hook for attestation validation? Above checks enforce "none", but this could be extracted.
@@ -132,5 +134,33 @@ public class FidoRegistrationService : IFidoRegistrationService
         // TODO: recommended to store transports alongside key (call getTransports()) to use in future allowCredentials options
         
         return FidoRegistrationResult.Success(key, attestationObject);
+    }
+}
+
+/// <summary>
+/// Validates <a href="https://www.w3.org/TR/webauthn-2/#attestation-statement">attestation statements</a> against <a href="https://www.w3.org/TR/webauthn-2/#attestation-statement-format">attestation format</a> rules.
+/// 
+/// </summary>
+public interface IAttestationStatementValidator
+{
+    /// <summary>
+    /// Validates the attestationObject's attestation statement.
+    /// </summary>
+    bool IsValid(AttestationObject attestationObject);
+}
+
+/// <summary>
+/// Default attestation statement validator.
+/// Only supports the <a href="https://www.w3.org/TR/webauthn-2/#sctn-none-attestation">none format</a>.
+/// </summary>
+public class DefaultAttestationStatementValidator : IAttestationStatementValidator
+{
+    /// <inheritdoc />
+    public bool IsValid(AttestationObject attestationObject)
+    {
+        if (attestationObject.StatementFormat != "none") throw new FidoException("Incorrect statement format - only 'none' is supported");
+        if (attestationObject.Statement.Length != 1) throw new FidoException("Incorrect statement count - 'none' format expects 0 statements");
+
+        return true;
     }
 }

@@ -20,5 +20,15 @@ public interface IClientDataParser
 public class ClientDataParser : IClientDataParser
 {
     /// <inheritdoc />
-    public ClientData Parse(ReadOnlySpan<byte> clientDataJson) => JsonSerializer.Deserialize<ClientData>(clientDataJson);
+    public ClientData Parse(ReadOnlySpan<byte> clientDataJson)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<ClientData>(clientDataJson);
+        }
+        catch (Exception e)
+        {
+            throw new FidoException("Unable to parse clientDataJSON bytes", e);
+        }
+    }
 }

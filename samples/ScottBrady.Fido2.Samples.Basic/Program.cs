@@ -2,6 +2,8 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.Extensions.DependencyInjection;
 using ScottBrady.Fido2;
 using ScottBrady.Fido2.Stores;
 
@@ -14,8 +16,11 @@ builder.Services.AddWebAuthn(options =>
     })
     .AddJsonFileKeyStore();
 
+builder.Services.AddHttpLogging(options => options.LoggingFields = HttpLoggingFields.All);
+
 var app = builder.Build();
 
+app.UseHttpLogging();
 app.UseDeveloperExceptionPage();
 
 app.UseDefaultFiles();

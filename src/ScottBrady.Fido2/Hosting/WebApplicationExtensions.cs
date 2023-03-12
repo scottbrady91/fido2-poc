@@ -58,7 +58,7 @@ public static class WebApplicationExtensions
             }
             catch (FidoException e)
             {
-                return Results.BadRequest(new ServerResponse { status = "failed", errorMessage = e.Message });
+                return Results.BadRequest(ServerResponse.Failure(e));
             }
         });
         
@@ -69,11 +69,11 @@ public static class WebApplicationExtensions
             {
                 var credential = await JsonSerializer.DeserializeAsync<ServerPublicKeyCredential>(context.Request.Body, configurationOptions.Value.JsonSerializerOptions);
                 var result = await registrationService.Complete(credential.ToWebAuthn());
-                return result.IsSuccess ? Results.Json(result) : Results.BadRequest();
+                return result.IsSuccess ? Results.Json(ServerResponse.Success()) : Results.BadRequest(ServerResponse.Failure(result));
             }
             catch (FidoException e)
             {
-                return Results.BadRequest(new ServerResponse { status = "failed", errorMessage = e.Message });
+                return Results.BadRequest(ServerResponse.Failure(e));
             }
         });
         
@@ -82,8 +82,12 @@ public static class WebApplicationExtensions
 
     internal class ServerResponse
     {
-        public string status { get; set; }
-        public string errorMessage { get; set; } = ""; // required 🤣
+        public static ServerResponse Success() => new ServerResponse { status = "ok", errorMessage = "" };
+        public static ServerResponse Failure(FidoRegistrationResult result) => new ServerResponse { status = "failed", errorMessage = result.Error };
+        public static ServerResponse Failure(Exception exception) => new ServerResponse { status = "failed", errorMessage = exception.Message };
+        
+        public string status { get; private init; } = "ok"; // 👍
+        public string errorMessage { get; private init; } = ""; // required 🤣
     }
 
     // https://github.com/fido-alliance/conformance-test-tools-resources/blob/master/docs/FIDO2/Server/Conformance-Test-API.md#serverpublickeycredentialcreationoptionsresponse
@@ -91,8 +95,6 @@ public static class WebApplicationExtensions
     {
         public ServerPublicKeyCredentialCreationOptionsResponse(PublicKeyCredentialCreationOptions options)
         {
-            status = "ok"; // 👍
-            
             rp = options.RelyingParty;
             user = new ServerPublicKeyCredentialUserEntity(options.User);
             challenge = Base64UrlTextEncoder.Encode(options.Challenge);
@@ -121,7 +123,7 @@ public static class WebApplicationExtensions
         public string id { get; set; }
         public string type { get; set; }
         public ServerAuthenticatorAttestationResponse response { get; set; }
-        public string getClientExtensionResults { get; set; } // TODO: getClientExtensionResults
+        public object getClientExtensionResults { get; set; } // TODO: getClientExtensionResults
 
         public PublicKeyCredential ToWebAuthn() =>
             new PublicKeyCredential
