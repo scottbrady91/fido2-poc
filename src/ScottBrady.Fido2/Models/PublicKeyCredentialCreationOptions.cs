@@ -42,6 +42,7 @@ public class PublicKeyCredentialCreationOptions
         AuthenticatorSelectionCriteria = request.AuthenticatorSelectionCriteria;
         Attestation = request.AttestationConveyancePreference;
         DeviceDisplayName = request.DeviceDisplayName;
+        Extensions = request.Extensions;
     }
     
     /// <summary>

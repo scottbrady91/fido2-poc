@@ -22,6 +22,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.UseWebAuthnApi();
+app.UseFidoConformanceApi();
 
 // demo endpoint to view current key store
 app.MapGet("/fido/keys", (JsonFidoKeyStore store) => 

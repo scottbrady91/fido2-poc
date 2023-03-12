@@ -5,7 +5,7 @@ namespace ScottBrady.Fido2.Models;
 /// <summary>
 /// Returned when a new credential is created (registration) or a new assertion is requested (authentication). 
 /// </summary>
-public class PublicKeyCredential
+public class PublicKeyCredential // TODO: does PublicKeyCredential require constructor? 
 {
     /// <summary>
     /// The credentials identifier, base64url encoded.
@@ -52,7 +52,7 @@ public abstract class AuthenticatorResponse
 /// <summary>
 /// The authenticator's response to a client's request to create a new credential (registration).
 /// </summary>
-public class AuthenticatorAttestationResponse : AuthenticatorResponse
+public class AuthenticatorAttestationResponse : AuthenticatorResponse // TODO: does AuthenticatorAttestationResponse require a constructor? 
 {
     /// <inheritdoc cref="Models.AttestationObject" />
     [JsonPropertyName("attestationObject")]

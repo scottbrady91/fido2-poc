@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using ScottBrady.Fido2.Models;
 
@@ -58,4 +59,8 @@ public class FidoRegistrationRequest
     /// <inheritdoc cref="PublicKeyCredentialCreationOptions.Attestation"/>
     [JsonPropertyName("attestation")]
     public string AttestationConveyancePreference { get; set; } = WebAuthnConstants.AttestationConveyancePreference.None;
+    
+    // TODO: docs for extensions
+    [JsonPropertyName("extensions")]
+    public Dictionary<string, object> Extensions { get; set; }
 }

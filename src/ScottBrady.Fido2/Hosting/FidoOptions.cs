@@ -63,7 +63,7 @@ public class FidoOptions
     public JsonSerializerOptions JsonSerializerOptions { get; set; } = new JsonSerializerOptions
     {
         Converters = { new IntArrayJsonConverter(), new EmptyToNullStringConverter() },
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         PropertyNameCaseInsensitive = true
     }; // TODO: check handling style in Microsoft.IdentityModel
 }
