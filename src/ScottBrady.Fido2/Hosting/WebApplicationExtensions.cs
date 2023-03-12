@@ -26,7 +26,8 @@ public static class WebApplicationExtensions
     /// </summary>
     public static WebApplication UseWebAuthnApi(this WebApplication app)
     {
-        app.MapPut("/fido/register", WebAuthnMinimalApiHandlers.InitiateRegistration);
+        app.MapPut("/fido/register", (HttpContext context, ILogger<IFidoRegistrationService> logger, IFidoRegistrationService registrationService, IOptions<FidoOptions> configurationOptions)
+            => WebAuthnMinimalApiHandlers.InitiateRegistration(context, logger, registrationService, configurationOptions));
 
         app.MapPost("/fido/register", (HttpContext context, ILogger<IFidoRegistrationService> logger, IFidoRegistrationService registrationService, IOptions<FidoOptions> configurationOptions)
             => WebAuthnMinimalApiHandlers.CompleteRegistration(context, logger, registrationService, configurationOptions));
@@ -126,17 +127,15 @@ public static class WebApplicationExtensions
         public object getClientExtensionResults { get; set; } // TODO: getClientExtensionResults
 
         public PublicKeyCredential ToWebAuthn() =>
-            new PublicKeyCredential
-            {
-                Id = id,
-                RawId = Base64UrlTextEncoder.Decode(id),
-                Type = type,
-                Response = new AuthenticatorAttestationResponse
+            new PublicKeyCredential(
+                id,
+                Base64UrlTextEncoder.Decode(id),
+                type,
+                new AuthenticatorAttestationResponse
                 {
                     ClientDataJson = Base64UrlTextEncoder.Decode(response.clientDataJSON),
                     AttestationObject = Base64UrlTextEncoder.Decode(response.attestationObject)
-                }
-            };
+                });
     }
 
     // https://github.com/fido-alliance/conformance-test-tools-resources/blob/master/docs/FIDO2/Server/Conformance-Test-API.md#serverauthenticatorattestationresponse

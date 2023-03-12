@@ -119,17 +119,15 @@ public class ApiTests
         //     "clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoibWRLeTAtVHRvanUybVJIUFQ0dG5DV3VTbGtxVWNUM2xEQm9WU0FXcURvRSIsIm9yaWdpbiI6Imh0dHBzOi8vbG9jYWxob3N0OjUwMDAiLCJjcm9zc09yaWdpbiI6ZmFsc2UsIm90aGVyX2tleXNfY2FuX2JlX2FkZGVkX2hlcmUiOiJkbyBub3QgY29tcGFyZSBjbGllbnREYXRhSlNPTiBhZ2FpbnN0IGEgdGVtcGxhdGUuIFNlZSBodHRwczovL2dvby5nbC95YWJQZXgifQ=="
         //   }
         // }
-        var publicKeyCredential = new PublicKeyCredential
-        {
-            Id = RegistrationData.Id,
-            RawId = RegistrationData.RawId,
-            Type = RegistrationData.Type,
-            Response = new AuthenticatorAttestationResponse
+        var publicKeyCredential = new PublicKeyCredential(
+            RegistrationData.Id,
+            RegistrationData.RawId,
+            RegistrationData.Type,
+            new AuthenticatorAttestationResponse
             {
                 AttestationObject = RegistrationData.AttestationObject,
                 ClientDataJson = RegistrationData.ClientDataJson
-            }
-        };
+            });
 
         var response = await client.PostAsync("/fido/register",
             new StringContent(JsonSerializer.Serialize(publicKeyCredential), Encoding.UTF8, "application/json"));
@@ -228,19 +226,17 @@ public class ApiTests
         //     "clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiaFRDX0RUTDRJNWNYZ2x3Z2tFQlYtQSIsIm9yaWdpbiI6Imh0dHBzOi8vbG9jYWxob3N0OjUwMDAiLCJjcm9zc09yaWdpbiI6ZmFsc2V9"
         //   }
         // }
-        var publicKeyCredential = new PublicKeyCredential
-        {
-            Id = AuthenticationData.Id,
-            RawId = AuthenticationData.RawId,
-            Type = AuthenticationData.Type,
-            Response = new AuthenticatorAssertionResponse
+        var publicKeyCredential = new PublicKeyCredential(
+            AuthenticationData.Id,
+            AuthenticationData.RawId,
+            AuthenticationData.Type,
+            new AuthenticatorAssertionResponse
             {
                 AuthenticatorData = AuthenticationData.AuthenticatorData,
                 Signature = AuthenticationData.Signature,
                 UserHandle = AuthenticationData.UserHandle,
                 ClientDataJson = AuthenticationData.ClientDataJson
-            }
-        };
+            });
 
         var response = await client.PostAsync("/fido/authenticate",
             new StringContent(JsonSerializer.Serialize(publicKeyCredential, jsonSerializerOptions), Encoding.UTF8, "application/json"));

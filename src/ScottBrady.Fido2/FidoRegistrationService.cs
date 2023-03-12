@@ -158,6 +158,13 @@ public class DefaultAttestationStatementValidator : IAttestationStatementValidat
     /// <inheritdoc />
     public bool IsValid(AttestationObject attestationObject)
     {
+        // TODO: remove test
+        /*if (attestationObject.StatementFormat == "packed")
+        {
+            if (0 < attestationObject.Statement.Length) return true;
+            throw new FidoException("Missing statement for packed format");
+        };*/
+        
         if (attestationObject.StatementFormat != "none") throw new FidoException("Incorrect statement format - only 'none' is supported");
         if (attestationObject.Statement.Length != 1) throw new FidoException("Incorrect statement count - 'none' format expects 0 statements");
 

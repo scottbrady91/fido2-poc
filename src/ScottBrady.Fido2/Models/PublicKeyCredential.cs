@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 
 namespace ScottBrady.Fido2.Models;
 
@@ -7,6 +8,14 @@ namespace ScottBrady.Fido2.Models;
 /// </summary>
 public class PublicKeyCredential // TODO: does PublicKeyCredential require constructor? 
 {
+    public PublicKeyCredential(string id, byte[] rawId, string type, AuthenticatorResponse response)
+    {
+        Id = id ?? throw new ArgumentNullException(nameof(id));
+        RawId = rawId ?? throw new ArgumentNullException(nameof(rawId));
+        Type = type ?? throw new ArgumentNullException(nameof(type));
+        Response = response ?? throw new ArgumentNullException(nameof(response));
+    }
+    
     /// <summary>
     /// The credentials identifier, base64url encoded.
     /// </summary>
