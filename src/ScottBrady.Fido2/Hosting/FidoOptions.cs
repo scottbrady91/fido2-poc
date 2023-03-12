@@ -51,10 +51,13 @@ public class FidoOptions
             { CoseConstants.Algorithms.ES256, () => new EcdsaSignatureValidationStrategy() },
             { CoseConstants.Algorithms.ES384, () => new EcdsaSignatureValidationStrategy() },
             { CoseConstants.Algorithms.ES512, () => new EcdsaSignatureValidationStrategy() },
+            { CoseConstants.Algorithms.PS256, () => new RsaSignatureValidationStrategy() },
+            { CoseConstants.Algorithms.PS384, () => new RsaSignatureValidationStrategy() },
+            { CoseConstants.Algorithms.PS512, () => new RsaSignatureValidationStrategy() },
             { CoseConstants.Algorithms.RS256, () => new RsaSignatureValidationStrategy() },
             { CoseConstants.Algorithms.RS384, () => new RsaSignatureValidationStrategy() },
-            { CoseConstants.Algorithms.RS512, () => new RsaSignatureValidationStrategy() }
-            // TODO: RS1?
+            { CoseConstants.Algorithms.RS512, () => new RsaSignatureValidationStrategy() },
+            { CoseConstants.Algorithms.RS1, () => new RsaSignatureValidationStrategy() }
         };
 
     /// <summary>

@@ -13,7 +13,7 @@ public class EcdsaSignatureValidationStrategy : ISignatureValidationStrategy
     public bool IsValidSignature(ReadOnlySpan<byte> data, byte[] signature, CredentialPublicKey key)
     {
         using var ecDsa = ECDsa.Create(key.LoadEcParameters());
-        return ecDsa.VerifyData(data, DecodeSignature(signature), HashAlgorithmName.SHA256);
+        return ecDsa.VerifyData(data, DecodeSignature(signature), GetHashingAlgorithm(key.Algorithm));
     }
     
     /// <summary>
@@ -39,5 +39,16 @@ public class EcdsaSignatureValidationStrategy : ISignatureValidationStrategy
         s.Span.CopyTo(parsedSignature.AsSpan()[r.Length..]);
 
         return parsedSignature;
+    }
+
+    private static HashAlgorithmName GetHashingAlgorithm(string alg)
+    {
+        return alg switch
+        {
+            CoseConstants.Algorithms.ES256 => HashAlgorithmName.SHA256,
+            CoseConstants.Algorithms.ES384 => HashAlgorithmName.SHA384,
+            CoseConstants.Algorithms.ES512 => HashAlgorithmName.SHA512,
+            _ => throw new FidoException("Unknown RSA algorithm")
+        };   
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 
 namespace ScottBrady.Fido2.Models;
 
@@ -7,6 +8,17 @@ namespace ScottBrady.Fido2.Models;
 /// </summary>
 public class TokenBinding
 {
+    /// <summary>
+    /// Creates a new TokenBinding object using required values.
+    /// </summary>
+    public TokenBinding(string status)
+    {
+        Status = status ?? throw new ArgumentNullException(nameof(status));
+
+        if (status is not WebAuthnConstants.TokenBindingStatus.Present or WebAuthnConstants.TokenBindingStatus.Supported)
+            throw new FidoException("Unknown token binding status");
+    }
+    
     /// <summary>
     /// The state of Token Binding for this request.
     /// Unknown values must be ignored.

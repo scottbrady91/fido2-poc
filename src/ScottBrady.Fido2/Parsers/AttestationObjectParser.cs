@@ -40,9 +40,17 @@ public class AttestationObjectParser : IAttestationObjectParser
             if (ms.Position != ms.Length) throw new FidoException("Invalid attestationObject length");
         }
         
-        var attestationStatementFormat = cbor["fmt"]; // should be textstring
-        var attestationStatement = cbor["attStmt"]; // should be map
-        var authenticatorDataCbor = cbor["authData"]; // should be bytes
+        var attestationStatementFormat = cbor["fmt"];
+        if (attestationStatementFormat.IsNull) throw new FidoException("Invalid attestationObject - missing fmt value");
+        if (attestationStatementFormat.Type != CBORType.TextString) throw new FidoException("Invalid attestationObject - fmt must be a text string");
+        
+        var attestationStatement = cbor["attStmt"];
+        if (attestationStatement.IsNull) throw new FidoException("Invalid attestationObject - missing attStmt value");
+        if (attestationStatement.Type != CBORType.Map) throw new FidoException("Invalid attestationObject - attStmt must be a map");
+        
+        var authenticatorDataCbor = cbor["authData"];
+        if (authenticatorDataCbor.IsNull) throw new FidoException("Invalid attestationObject - missing authData value");
+        if (authenticatorDataCbor.Type != CBORType.ByteString) throw new FidoException("Invalid attestationObject - authData must be a byte string");
         
         var authenticatorData = authenticatorDataParser.Parse(authenticatorDataCbor.GetByteString());
         

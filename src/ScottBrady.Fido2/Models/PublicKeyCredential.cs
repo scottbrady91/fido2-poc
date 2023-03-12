@@ -6,8 +6,16 @@ namespace ScottBrady.Fido2.Models;
 /// <summary>
 /// Returned when a new credential is created (registration) or a new assertion is requested (authentication). 
 /// </summary>
-public class PublicKeyCredential // TODO: does PublicKeyCredential require constructor? 
+public class PublicKeyCredential 
 {
+    /// <summary>
+    /// Creates a new PublicKeyCredential with required parameters
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="rawId"></param>
+    /// <param name="type"></param>
+    /// <param name="response"></param>
+    /// <exception cref="ArgumentNullException"></exception>
     public PublicKeyCredential(string id, byte[] rawId, string type, AuthenticatorResponse response)
     {
         Id = id ?? throw new ArgumentNullException(nameof(id));

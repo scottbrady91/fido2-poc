@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -80,6 +80,7 @@ public class FidoRegistrationService : IFidoRegistrationService
     /// <inheritdoc />
     public async Task<FidoRegistrationResult> Complete(PublicKeyCredential credential)
     {
+        if (credential.Type != WebAuthnConstants.PublicKeyCredentialType.PublicKey) throw new FidoException("Incorrect type - not of type public-key");
         if (credential.Response is not AuthenticatorAttestationResponse response) throw new FidoException("Incorrect response - not of type AuthenticatorAttestationResponse");
         var clientData = clientDataParser.Parse(response.ClientDataJson);
 
@@ -158,7 +159,7 @@ public class DefaultAttestationStatementValidator : IAttestationStatementValidat
     /// <inheritdoc />
     public bool IsValid(AttestationObject attestationObject)
     {
-        // TODO: remove test
+        // TODO: remove test or support packed statement format.
         /*if (attestationObject.StatementFormat == "packed")
         {
             if (0 < attestationObject.Statement.Length) return true;

@@ -54,6 +54,8 @@ public class AuthenticatorDataParser : IAuthenticatorDataParser
         {
             parsedData.Extensions = CBORObject.Read(ms).EncodeToBytes();
         }
+        
+        if (ms.Position != ms.Length) throw new FidoException("Invalid authData length");
 
         return parsedData;
     }
