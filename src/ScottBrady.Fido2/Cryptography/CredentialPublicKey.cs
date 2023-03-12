@@ -2,6 +2,8 @@
 using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 using Microsoft.IdentityModel.Tokens;
+using ScottBrady.IdentityModel.Crypto;
+using ScottBrady.IdentityModel.Tokens;
 
 namespace ScottBrady.Fido2.Cryptography;
 
@@ -112,5 +114,28 @@ public class CredentialPublicKey
             Modulus = Base64UrlEncoder.DecodeBytes(modulus),
             Exponent = Base64UrlEncoder.DecodeBytes(exponent)
         };
+    }
+
+    /// <summary>
+    /// Creates a <see cref="EdDsaParameters"/> from the JSON key using COSE keys and values
+    /// </summary>
+    /// <returns><see cref="EdDsaParameters"/> that can be used to create an instance of <see cref="EdDsa"/></returns>
+    /// <exception cref="FidoException">Unable to parse public key or find required values</exception>
+    public EdDsaParameters LoadEdDsaParameters()
+    {
+        var jsonNode = JsonNode.Parse(KeyAsJson);
+        if (jsonNode == null) throw new FidoException("Unable to parse coseKeyAsJson");
+        
+        var crv = jsonNode[CoseConstants.Parameters.Crv]?.ToString() ?? throw new FidoException("Unable to find crv (-1) value for EdDSA key");
+        var x = jsonNode[CoseConstants.Parameters.X]?.ToString() ?? throw new FidoException("Unable to find x (-2) coordinate for EdDSA key");
+
+        var parsedCurve = crv switch
+        {
+            CoseConstants.EllipticCurves.Ed25519 => ExtendedSecurityAlgorithms.Curves.Ed25519,
+            CoseConstants.EllipticCurves.Ed448 => ExtendedSecurityAlgorithms.Curves.Ed448,
+            _ => throw new FidoException($"Unsupported EdDSA curve of {crv}")
+        };
+
+        return new EdDsaParameters(parsedCurve) { X = Base64UrlEncoder.DecodeBytes(x) };
     }
 }

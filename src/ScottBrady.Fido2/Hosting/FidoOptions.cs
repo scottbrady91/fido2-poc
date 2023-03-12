@@ -47,7 +47,7 @@ public class FidoOptions
     public Dictionary<string, Func<ISignatureValidationStrategy>> SigningAlgorithmStrategies = 
         new Dictionary<string, Func<ISignatureValidationStrategy>>
         {
-            // TODO: EdDSA?
+            { CoseConstants.Algorithms.EdDSA, () => new EdDsaSignatureValidationStrategy() },
             { CoseConstants.Algorithms.ES256, () => new EcdsaSignatureValidationStrategy() },
             { CoseConstants.Algorithms.ES384, () => new EcdsaSignatureValidationStrategy() },
             { CoseConstants.Algorithms.ES512, () => new EcdsaSignatureValidationStrategy() },
