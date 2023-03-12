@@ -68,7 +68,7 @@ public static class WebApplicationExtensions
         {
             try
             {
-                var credential = await JsonSerializer.DeserializeAsync<ServerPublicKeyCredential>(context.Request.Body, configurationOptions.Value.JsonSerializerOptions);
+                var credential = await JsonSerializer.DeserializeAsync<RegistrationServerPublicKeyCredential>(context.Request.Body, configurationOptions.Value.JsonSerializerOptions);
                 var result = await registrationService.Complete(credential.ToWebAuthn());
                 return result.IsSuccess ? Results.Json(ServerResponse.Success()) : Results.BadRequest(ServerResponse.Failure(result));
             }
@@ -78,6 +78,37 @@ public static class WebApplicationExtensions
             }
         });
         
+        // https://github.com/fido-alliance/conformance-test-tools-resources/blob/master/docs/FIDO2/Server/Conformance-Test-API.md#authentication-example-credential-get-options
+        app.MapPost("/assertion/options", async (HttpContext context, ILogger<IFidoAuthenticationService> logger, IFidoAuthenticationService authenticationService, IOptions<FidoOptions> configurationOptions) =>
+        {
+            try
+            {
+                var request = await JsonSerializer.DeserializeAsync<FidoAuthenticationRequest>(context.Request.Body, configurationOptions.Value.JsonSerializerOptions);
+                var options = await authenticationService.Initiate(request);
+                return Results.Json(new ServerPublicKeyCredentialGetOptionsResponse(options), configurationOptions.Value.JsonSerializerOptions);
+            }
+            catch (Exception e)
+            {
+                return Results.BadRequest(ServerResponse.Failure(e));
+            }
+        });
+        
+        // https://github.com/fido-alliance/conformance-test-tools-resources/blob/master/docs/FIDO2/Server/Conformance-Test-API.md#authentication-example-authenticator-assertion-response
+        app.MapPost("/assertion/result", async (HttpContext context, ILogger<IFidoAuthenticationService> logger, IFidoAuthenticationService authenticationService, IOptions<FidoOptions> configurationOptions) =>
+        {
+            try
+            {
+                var credential = await JsonSerializer.DeserializeAsync<AuthenticationServerPublicKeyCredential>(context.Request.Body, configurationOptions.Value.JsonSerializerOptions);
+                var result = await authenticationService.Complete(credential.ToWebAuthn());
+                return result.IsSuccess ? Results.Json(ServerResponse.Success()) : Results.BadRequest(ServerResponse.Failure(result));
+            }
+            catch (Exception e)
+            {
+                return Results.BadRequest(ServerResponse.Failure(e));
+            }
+        });
+
+        
         return app;
     }
 
@@ -85,6 +116,7 @@ public static class WebApplicationExtensions
     {
         public static ServerResponse Success() => new ServerResponse { status = "ok", errorMessage = "" };
         public static ServerResponse Failure(FidoRegistrationResult result) => new ServerResponse { status = "failed", errorMessage = result.Error };
+        public static ServerResponse Failure(FidoAuthenticationResult result) => new ServerResponse { status = "failed", errorMessage = result.Error };
         public static ServerResponse Failure(Exception exception) => new ServerResponse { status = "failed", errorMessage = exception.Message };
         
         public string status { get; private init; } = "ok"; // 👍
@@ -118,14 +150,40 @@ public static class WebApplicationExtensions
         public Dictionary<string, object> extensions { get; }
     }
 
+    // https://github.com/fido-alliance/conformance-test-tools-resources/blob/master/docs/FIDO2/Server/Conformance-Test-API.md#serverpublickeycredentialgetoptionsresponse
+    internal class ServerPublicKeyCredentialGetOptionsResponse : ServerResponse
+    {
+        public ServerPublicKeyCredentialGetOptionsResponse(PublicKeyCredentialRequestOptions options)
+        {
+            challenge = Base64UrlTextEncoder.Encode(options.Challenge);
+            timeout = options.Timeout;
+            rpId = options.RpId;
+            allowCredentials = options.AllowCredentials.Select(x => new ServerPublicKeyCredentialDescriptor(x)).ToList();
+            userVerification = options.UserVerification;
+            extensions = options.Extensions;
+        }
+        
+        public string challenge { get; }
+        public int? timeout { get; }
+        public string rpId { get; }
+        public IEnumerable<ServerPublicKeyCredentialDescriptor> allowCredentials { get; }
+        public string userVerification { get; }
+        public Dictionary<string, object> extensions { get; }
+    }
+
     // https://github.com/fido-alliance/conformance-test-tools-resources/blob/master/docs/FIDO2/Server/Conformance-Test-API.md#serverpublickeycredential
     internal class ServerPublicKeyCredential
     {
         public string id { get; set; }
         public string type { get; set; }
-        public ServerAuthenticatorAttestationResponse response { get; set; }
         public object getClientExtensionResults { get; set; } // TODO: getClientExtensionResults
+    }
 
+    // cheating for now
+    internal class RegistrationServerPublicKeyCredential : ServerPublicKeyCredential
+    {
+        public ServerAuthenticatorAttestationResponse response { get; set; }
+        
         public PublicKeyCredential ToWebAuthn() =>
             new PublicKeyCredential(
                 id,
@@ -136,13 +194,40 @@ public static class WebApplicationExtensions
                     ClientDataJson = Base64UrlTextEncoder.Decode(response.clientDataJSON),
                     AttestationObject = Base64UrlTextEncoder.Decode(response.attestationObject)
                 });
-    }
+    } 
+
+    // cheating for now
+    internal class AuthenticationServerPublicKeyCredential : ServerPublicKeyCredential
+    {
+        public ServerAuthenticatorAssertionResponse response { get; set; }
+        
+        public PublicKeyCredential ToWebAuthn() =>
+            new PublicKeyCredential(
+                id,
+                Base64UrlTextEncoder.Decode(id),
+                type,
+                new AuthenticatorAssertionResponse
+                {
+                    ClientDataJson = Base64UrlTextEncoder.Decode(response.clientDataJSON),
+                    AuthenticatorData = Base64UrlTextEncoder.Decode(response.authenticatorData),
+                    Signature = Base64UrlTextEncoder.Decode(response.signature),
+                    UserHandle = Base64UrlTextEncoder.Decode(response.userHandle)
+                });
+    } 
 
     // https://github.com/fido-alliance/conformance-test-tools-resources/blob/master/docs/FIDO2/Server/Conformance-Test-API.md#serverauthenticatorattestationresponse
     internal class ServerAuthenticatorAttestationResponse // TODO: unknown base type in Github (ServerAuthenticatorResponse) 
     {
         public string clientDataJSON { get; set; }
         public string attestationObject { get; set; }
+    }
+
+    internal class ServerAuthenticatorAssertionResponse
+    {
+        public string clientDataJSON { get; set; }
+        public string authenticatorData { get; set; }
+        public string signature { get; set; }
+        public string userHandle { get; set; }
     }
 
     internal class ServerPublicKeyCredentialUserEntity

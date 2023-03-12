@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using ScottBrady.Fido2.Models;
 
@@ -41,4 +42,8 @@ public class FidoAuthenticationRequest
     /// <example>preferred</example>
     [JsonPropertyName("userVerification")]
     public string UserVerification { get; set; } = WebAuthnConstants.UserVerificationRequirement.Preferred;
+    
+    // TODO: docs for extensions
+    [JsonPropertyName("extensions")]
+    public Dictionary<string, object> Extensions { get; set; }
 }

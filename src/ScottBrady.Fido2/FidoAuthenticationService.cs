@@ -81,7 +81,7 @@ public class FidoAuthenticationService : IFidoAuthenticationService
             RpId = configurationOptions.RelyingPartyId,
             AllowCredentials = keys.Select(x => new PublicKeyCredentialDescriptor(x.CredentialId)).ToList(),
             UserVerification = request.UserVerification ?? WebAuthnConstants.UserVerificationRequirement.Preferred,
-            // extensions
+            Extensions = request.Extensions
         };
 
         await optionsStore.Store(options);
@@ -92,6 +92,7 @@ public class FidoAuthenticationService : IFidoAuthenticationService
     /// <inheritdoc />
     public async Task<FidoAuthenticationResult> Complete(PublicKeyCredential credential)
     {
+        if (credential.Type != WebAuthnConstants.PublicKeyCredentialType.PublicKey) throw new FidoException("Incorrect type - not of type public-key");
         if (credential.Response is not AuthenticatorAssertionResponse response) throw new FidoException("Incorrect response - not of type AuthenticatorAssertionResponse");
         var clientData = clientDataParser.Parse(response.ClientDataJson);
         
@@ -134,7 +135,8 @@ public class FidoAuthenticationService : IFidoAuthenticationService
         var isValidSignature = await signatureValidator.HasValidSignature(response, key.CredentialPublicKey);
         if (!isValidSignature) throw new FidoException("Invalid signature");
 
-        if (authenticatorData.SignCount <= key.Counter) throw new FidoException("SignCount is less than or equal to stored counter for key - authenticator may have been cloned");
+        if (authenticatorData.SignCount <= key.Counter && key.Counter != 0 && authenticatorData.SignCount != 0) 
+            throw new FidoException("SignCount is less than or equal to stored counter for key - authenticator may have been cloned");
         await keyStore.UpdateCounter(key.CredentialId, authenticatorData.SignCount);
 
         return FidoAuthenticationResult.Success(key, authenticatorData);
