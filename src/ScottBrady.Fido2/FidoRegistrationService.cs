@@ -1,10 +1,13 @@
-using System;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using PeterO.Cbor;
+using ScottBrady.Fido2.Cryptography;
 using ScottBrady.Fido2.Models;
 using ScottBrady.Fido2.Parsers;
 using ScottBrady.Fido2.Stores;
@@ -80,6 +83,8 @@ public class FidoRegistrationService : IFidoRegistrationService
     /// <inheritdoc />
     public async Task<FidoRegistrationResult> Complete(PublicKeyCredential credential)
     {
+        if (credential == null) throw new ArgumentNullException(nameof(credential));
+        
         if (credential.Type != WebAuthnConstants.PublicKeyCredentialType.PublicKey) throw new FidoException("Incorrect type - not of type public-key");
         if (credential.Response is not AuthenticatorAttestationResponse response) throw new FidoException("Incorrect response - not of type AuthenticatorAttestationResponse");
         var clientData = clientDataParser.Parse(response.ClientDataJson);
@@ -95,7 +100,7 @@ public class FidoRegistrationService : IFidoRegistrationService
         if (clientData.TokenBinding != null && clientData.TokenBinding.Status == WebAuthnConstants.TokenBindingStatus.Present) throw new FidoException("Unsupported token binding status"); 
         
         var attestationObject = attestationObjectParser.Parse(response.AttestationObject);
-        if (!attestationStatementValidator.IsValid(attestationObject)) throw new FidoException("Failed attestation statement validation"); 
+        if (!await attestationStatementValidator.IsValid(attestationObject, credential.Response.ClientDataJson)) throw new FidoException("Failed attestation statement validation"); 
         
         // var clientDataHash = SHA256.HashData(clientDataJson); // used for attestation statement validation
         // TODO: hook for attestation validation? Above checks enforce "none", but this could be extracted.
@@ -104,7 +109,8 @@ public class FidoRegistrationService : IFidoRegistrationService
             throw new FidoException("Incorrect RP ID - RpIdHash in authenticatorData does not match configured relying party ID - may be a response for a different relying party");
 
         if (attestationObject.AuthenticatorData.UserPresent == false) 
-            throw new FidoException("User not present - WebAuthn requires the user to prove their intent");
+            throw new FidoException("User not present - WebAuthn requires the use" +
+                                    "r to prove their intent");
         
         if (options.AuthenticatorSelectionCriteria?.UserVerification == WebAuthnConstants.UserVerificationRequirement.Required && !attestationObject.AuthenticatorData.UserVerified)
             throw new FidoException("User verification required but user did not verify their identity with the authenticator");
@@ -147,7 +153,7 @@ public interface IAttestationStatementValidator
     /// <summary>
     /// Validates the attestationObject's attestation statement.
     /// </summary>
-    bool IsValid(AttestationObject attestationObject);
+    Task<bool> IsValid(AttestationObject attestationObject, byte[] clientDataJson);
 }
 
 /// <summary>
@@ -156,17 +162,59 @@ public interface IAttestationStatementValidator
 /// </summary>
 public class DefaultAttestationStatementValidator : IAttestationStatementValidator
 {
+    private readonly IFidoSignatureValidator signatureValidator;
+
+    /// <summary>
+    /// Create a new DefaultAttestationStatementValidator
+    /// </summary>
+    public DefaultAttestationStatementValidator(IFidoSignatureValidator signatureValidator)
+    {
+        this.signatureValidator = signatureValidator ?? throw new ArgumentNullException(nameof(signatureValidator));
+    }
+    
     /// <inheritdoc />
-    public bool IsValid(AttestationObject attestationObject)
+    public async Task<bool> IsValid(AttestationObject attestationObject, byte[] clientDataJson)
     {
         // TODO: remove test or support packed statement format.
-        /*if (attestationObject.StatementFormat == "packed")
+        if (attestationObject.StatementFormat == "packed")
         {
-            if (0 < attestationObject.Statement.Length) return true;
-            throw new FidoException("Missing statement for packed format");
-        };*/
+            if (attestationObject.Statement.Length == 1) throw new FidoException("Incorrect statement count - 'packed' statement is missing");
+            
+            CBORObject cbor;
+            using (var ms = new MemoryStream(attestationObject.Statement))
+            {
+                cbor = CBORObject.Read(ms);
+                if (ms.Position != ms.Length) throw new FidoException("Invalid attestation statement length");
+            }
+
+            var algorithm = cbor["alg"];
+            if (algorithm.IsNull) throw new FidoException("Invalid packed attestation statement - missing alg value");
+            if (!algorithm.IsNumber) throw new FidoException("Invalid packed attestation statement - alg value must be a number");
+            
+            var signature = cbor["sig"];
+            if (signature.IsNull) throw new FidoException("Invalid packed attestation statement - missing sig value");
+            if (signature.Type != CBORType.ByteString) throw new FidoException("Invalid packed attestation statement - sig value must be a byte string");
+            
+            var certificateChain = cbor["x5c"];
+            // if (signature.IsNull) throw new FidoException("Invalid packed attestation statement - missing sig value");
+            // if (signature.Type != CBORType.ByteString) throw new FidoException("Invalid packed attestation statement - sig value must be a byte string");
+
+            // if (certificateChain?.IsNull == false) throw new NotImplementedException();
+
+
+            if (algorithm.ToString() != attestationObject.AuthenticatorData.CredentialPublicKey.Algorithm)
+                throw new FidoException("Invalid algorithm value - authenticator data and attestation statement use different algorithms");
+            
+            
+            var isValid = await signatureValidator.HasValidSignature(
+                clientDataJson, attestationObject.AuthenticatorData.OriginalBytes, signature.GetByteString(), attestationObject.AuthenticatorData.CredentialPublicKey);
+
+            if (!isValid) return false;
+            return true;
+
+        }
         
-        if (attestationObject.StatementFormat != "none") throw new FidoException("Incorrect statement format - only 'none' is supported");
+        if (attestationObject.StatementFormat != WebAuthnConstants.AttestationFormats.None) throw new FidoException("Incorrect statement format - only 'none' is supported");
         if (attestationObject.Statement.Length != 1) throw new FidoException("Incorrect statement count - 'none' format expects 0 statements");
 
         return true;

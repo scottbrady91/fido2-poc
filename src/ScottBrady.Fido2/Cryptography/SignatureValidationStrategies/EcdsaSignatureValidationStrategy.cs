@@ -48,7 +48,7 @@ public class EcdsaSignatureValidationStrategy : ISignatureValidationStrategy
             CoseConstants.Algorithms.ES256 => HashAlgorithmName.SHA256,
             CoseConstants.Algorithms.ES384 => HashAlgorithmName.SHA384,
             CoseConstants.Algorithms.ES512 => HashAlgorithmName.SHA512,
-            _ => throw new FidoException("Unknown RSA algorithm")
+            _ => throw new FidoException("Unknown ECDSA algorithm")
         };   
     }
 }

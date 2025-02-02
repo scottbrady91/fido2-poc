@@ -66,10 +66,11 @@ public class AuthenticatorData
     /// </summary>
     public CredentialPublicKey CredentialPublicKey { get; set; }
     
-    
     /// <summary>
     /// Further authenticator data, defined as extensions.
     /// Not used by this library.
     /// </summary>
     public byte[] Extensions { get; set; }
+    
+    public byte[] OriginalBytes { get; set; }
 }

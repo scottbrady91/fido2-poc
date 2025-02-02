@@ -17,6 +17,7 @@ public interface IFidoSignatureValidator
     /// <param name="response">The original response from the FIDO authenticator including the clientDataJSON, authenticatorData, and signature.</param>
     /// <param name="key">The stored public key.</param>
     Task<bool> HasValidSignature(AuthenticatorAssertionResponse response, CredentialPublicKey key);
+    Task<bool> HasValidSignature(byte[] clientDataJson, byte[] authenticatorData, byte[] signature, CredentialPublicKey key);
 }
 
 /// <inheritdoc />
@@ -39,12 +40,17 @@ public class FidoSignatureValidator : IFidoSignatureValidator
     {
         if (response == null) throw new ArgumentNullException(nameof(response));
         if (key == null) throw new ArgumentNullException(nameof(key));
-        
-        var data = ParseData(response.ClientDataJson, response.AuthenticatorData);
+
+        return HasValidSignature(response.ClientDataJson, response.AuthenticatorData, response.Signature, key);
+    }
+
+    public Task<bool> HasValidSignature(byte[] clientDataJson, byte[] authenticatorData, byte[] signature, CredentialPublicKey key)
+    {
+        var data = ParseData(clientDataJson, authenticatorData);
 
         if (!options.SigningAlgorithmStrategies.TryGetValue(key.Algorithm, out var strategy)) throw new FidoException($"Unsupported COSE algorithm of {key.Algorithm}");
 
-        var isValid = strategy().IsValidSignature(data, response.Signature, key);
+        var isValid = strategy().IsValidSignature(data, signature, key);
         return Task.FromResult(isValid);
     }
 

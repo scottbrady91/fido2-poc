@@ -27,8 +27,9 @@ public class AuthenticatorDataParser : IAuthenticatorDataParser
     public AuthenticatorData Parse(ReadOnlySpan<byte> authenticatorData)
     {
         var parsedData = new AuthenticatorData();
+        parsedData.OriginalBytes = authenticatorData.ToArray();
 
-        using var ms = new MemoryStream(authenticatorData.ToArray());
+        using var ms = new MemoryStream(parsedData.OriginalBytes);
         
         parsedData.RpIdHash = ms.ReadBytes(32);
 

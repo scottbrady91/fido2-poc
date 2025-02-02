@@ -154,4 +154,50 @@ public static class WebAuthnConstants
         /// </summary>
         public const string Present = "present";
     }
+
+    /// <summary>
+    /// The format identifiers for attestation statements.
+    /// Value from <a href="https://www.iana.org/assignments/webauthn/webauthn.xhtml#webauthn-attestation-statement-format-ids">IANA registry</a>.
+    /// </summary>
+    public static class AttestationFormats
+    {
+        /// <summary>
+        /// The packed attestation format used by authenticators with limited resources.
+        /// </summary>
+        public const string Packed = "packed";
+        
+        /// <summary>
+        /// The TPM attestation format used by Trusted Platform Modules (TPMs).
+        /// Similar to the packed format but the rawData and signature fields are computed differently.
+        /// </summary>
+        public const string Tpm = "tpm";
+        
+        /// <summary>
+        /// The Android key attestation format used by Android phones.
+        /// Platform authenticators on versions "N", and later, may provide this proprietary "hardware attestation" statement.
+        /// </summary>
+        public const string AndroidKey = "android-key";
+        
+        /// <summary>
+        /// The Android key attestation format used by Android phones.
+        /// Android-based platform authenticators MAY produce an attestation statement based on the Android SafetyNet API.
+        /// </summary>
+        public const string AndroidSafetyNet = "android-safetynet";
+        
+        /// <summary>
+        /// The FIDO U2F attestation format used with FIDO U2F authenticators (CTAP1).
+        /// </summary>
+        public const string FidoU2f = "fido-u2f";
+        
+        /// <summary>
+        /// The Apple attestation format used with Apple devices' platform authenticators
+        /// </summary>
+        public const string Apple = "apple";
+        
+        /// <summary>
+        /// The "none" attestation format.
+        /// Used to replace any authenticator-provided attestation statement when a WebAuthn relying party indicates it does not wish to receive attestation information.
+        /// </summary>
+        public const string None = "none";
+    }
 }
